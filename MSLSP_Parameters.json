@@ -1,0 +1,155 @@
+{
+  "setup":{
+    
+    "imgStartYr":2016,
+    "imgEndYr":2019,
+    
+    "phenStartYr":2016,
+    "phenEndYr":2019,
+    
+    "downloadImagery":true,
+    "preprocessImagery":true,
+    "runPhenology":true,
+    
+    "runFmaskSentinel":true,
+    
+    "includeLandsat":true,
+    "includeSentinel":true
+  },
+  
+  
+    "AWS":{
+  
+    "workDir":"/scratch/",
+    "dataDir":"/scratch/",
+	  "logDir":"/home/ec2-user/",
+    "rScript":"/shared/code/MSLSP/MSLSP_Script.r",
+    "rFunctions":"/shared/code/MSLSP/MSLSP_Functions.r",
+    "productTable":"/shared/code/MSLSP/MSLSP_Layers.csv",
+    "fmaskFunction":"/shared/code/fmask_compiled/autoFmask_HLS_No_HDF",
+	  "envVariables":"/shared/code/MSLSP/env_variables_aws.sh",
+	  "s3Dir":"s3://mslsp/v1.0/",
+	  
+	  "numCores":48,
+    "numChunks":480,
+    
+    "keepChunks":true
+
+  },
+  
+    "SCC":{
+    
+    "workDir":"/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/",
+    "logDir":"/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/runLogs/",
+    "dataDir":"/projectnb/modislc/projects/landsat_sentinel/v1_4/",
+    "rScript":"/usr2/postdoc/dbolt/CodeFolder/git_repos/MSLSP/MSLSP_Script.r",
+    "rFunctions":"/usr2/postdoc/dbolt/CodeFolder/git_repos/MSLSP/MSLSP_Functions.r",
+    "productTable":"/usr2/postdoc/dbolt/CodeFolder/git_repos/MSLSP/MSLSP_Layers.csv",
+    "fmaskFunction":"/usr2/postdoc/dbolt/CodeFolder/others_code/Fmask_4_0_matlab/fmask_compiled/autoFmask_HLS",
+    
+
+    "numCores":28,
+    "numChunks":196,
+    "runS10":false
+
+  },
+  
+  "phenology_parameters":{
+  
+    "vegetation_index":"evi2",
+    
+    "maskNegativeValues":true,
+    
+    "doComposites":true,
+    
+    "min_seg_amplitude":0.1,  
+    "min_increase_length":30,   
+    "max_increase_length":185,   
+    "min_decrease_length":30,   
+    "max_decrease_length":185,  
+    "rel_amp_frac":0.35,
+    
+    "gup_threshes":[0.15, 0.5, 0.9],
+    "gdown_threshes":[0.9, 0.5, 0.15],
+    
+    "dormantQuantile":0.05,  
+    "dormStart":"2016-01-01",
+    "dormEnd":"2018-12-31",
+   
+    "spikeThresh":2,            
+    "minResid":0.1,              
+    "maxDistance":45,            
+    "maxDespikeIterations":50,   
+    
+    "splineBuffer":185,               
+    "splineSpar":0.4,   
+    
+    "gapLengthToFill":20,  
+    "maxWeight":0.5,                 
+    "minDaysForSplineComparison":90,  
+              
+    "ndmiSnowThresh":0.5,   
+    "distanceToSnow":5000,  
+    "snowWindow":5,         
+    "snowFraction":0.5,    
+    "snowBuffer":100,         
+    
+    "snowWeight":0.50,        
+    "snowFillVal":32767,      
+    
+    "bandLimits":[0.025,0.975]
+  
+  },
+  
+  "topocorrection_parameters":{
+    "topoCorrect":true,
+    "numILclass":5,
+    "numSamples":1000,
+    "topoVIs":["ndvi", "nbr"],      
+    "viQuantiles":0.9,          
+    "requiredDoyStart":60,      
+    "requiredDoyEnd":300,       
+    "kmeansClasses":5,
+    "kmeansIterations":500
+  },
+  
+  "qa_parameters":{
+    "min_r2_high_quality":0.75,   
+    "min_r2_mod_quality":0.75,  
+    "maxGap_high_quality":20, 
+    "maxGap_mod_quality":30
+  },
+  
+  
+  
+  "netcdf":{
+    "global":{  
+      "title":"Multisource Land Surface Phenology (MS-LSP)",
+      "product_version":"v0.1",
+      "summary":"A 30m Land Surface Phenology Product for North America derived from Landsat and Sentinel-2 imagery",
+      "algorithm theoretical basis document":"LINK NEEDED",
+      "user guide":"LINK NEEDED",
+      "software_repository":"git@github.com:BU-LCSC/MuSLI_LSP.git",
+      "reference":"Bolton, D.K., Gray, J.M., Melaas, E.K., Moon, M., Eklundh, L, Friedl, M.A., 2020. Continental-Scale Land Surface Phenology from Harmonized Landsat 8 and Sentinel-2 Imagery. Remote Sensing of Environment",
+      "program":"The Multi-Source Land Imaging (MuSLI) project funded by NASA's Land Cover Land Use Change (LCLUC) program",
+      "creator_name":"Land Cover & Surface Climate Group, Department of Earth & Environment, Boston University",
+      "creator_type":"group",
+      "creator_email":"friedl@bu.edu",
+      "creator_institution":"Boston University",
+      "contributor_name":"Douglas K. Bolton, Mark A. Friedl, Josh M. Gray, Lars Eklundh, Eli M. Melaas, Minkyu M. Moon",
+      "contributor_role":"Developer, Principal Investigator, Co-Investigator, Collaborator, Contributor, Contributor",
+      "acknowledgement":"Developed with funding from NASA LCLUC Grant #80NSSC18K0334. Data archiving and distribution supported by the NASA NSIDC Distributed Active Archive Center (DAAC)."
+    },
+    "transverse_mercator":{
+        "grid_mapping_name":"transverse_mercator",
+        "false_easting":5e+05,
+        "false_northing":0,
+        "latitude_of_projection_origin":0,
+        "scale_factor_at_central_meridian":0.9996,
+        "long_name":"CRS definition",
+        "longitude_of_prime_meridian":0,
+        "semi_major_axis":6378137,
+        "inverse_flattening":298.257223563
+    }
+  }
+}

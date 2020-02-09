@@ -1,0 +1,4 @@
+[1] "10TER"                                                              
+[2] "/projectnb/modislc/projects/landsat_sentinel/v1_4/S10/10TER/images/"
+[3] "2015"                                                               
+[4] "2020"                                                               
