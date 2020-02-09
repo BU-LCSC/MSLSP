@@ -6,78 +6,6 @@
 
 
 #---------------------------------------------------------------------
-#Get Default algorithm parameters for MuSLI LSP
-#Douglas Bolton and Josh Gray
-#---------------------------------------------------------------------
-DefaultPhenoParameters_HLS <- function(){
-
-  pheno_pars <- list(
-    
-    ## valid segment definition ##
-    min_seg_amplitude=0.1,    # absolute amplitude threshold
-    min_increase_length=30,    #Minimum increase length set to a month   (removes spurious short cycles)
-    max_increase_length=185,   #Maximum increase length set to half a year (removes spurious long cycles)
-    min_decrease_length=30,    #Minimum decrease length set to a month   (removes spurious short cycles)
-    max_decrease_length=185,   #Maximum decrease length set to half a year (removes spurious long cycles)
-    rel_amp_frac=0.35, # segment amplitude must be >= rel_amp_frac * global_amp (max - min)
-    rel_peak_frac=NA, # EVI value at peak must be >= rel_peak_frac * global max
-    
-    ## date thresholds ##
-    gup_threshes=c(0.15,0.5,0.9),
-    gdown_threshes=c(0.9,0.5,0.15),
-    
-    ## image and smoothing parameters ##        
-    dormantQuantile=0.05,   #Quantile for the dormant value
-    dormStart=as.Date('2016-01-01'), #Start date for getting the dormant value
-    dormEnd=as.Date('2018-12-31'),   #End date for getting the dormant value
-   
-    spikeThresh=2,             #A spike has to deviate X times the difference between the first and last values
-    minResid=0.1,             #A spike has to deviate at least X EVI2 in order to be removed
-    maxDistance=45,            #Three observations must be within X days in order to assess a spike 
-    maxDespikeIterations=50,   #Maximum iterations to look for spikes
-    
-    splineBuffer=185,                #Spline buffer in days (~6 months)
-    splineSpar=0.55,                 #Spline smoothing parameter
-    maxWeight=0.1,                   #Maximum spline weight for additional years
-    maxGapForSplineComparison=45,    #If data gap is greater than X, spline fit will be poor and shouldn't be used for comparison against other years (set to 6 weeks)
-    minDaysForSplineComparison=90,   #In order to compare splines from different years, the splines must overlap by at least X days 
-    howToCompare='euclidean',        #euclidean or correlation
-    
-    
-    ndmiSnowThresh=0.5,   
-    distanceToSnow=5000,    #If snow is detected within this distance (in meters), we will perform ndmi test
-    snowWindow=5,           #Number of pixels to filter snow before creating distance to snow search window
-    snowFraction=0.5,       #Fraction of pixels in snow window that must be snow in order to create search window
-    snowBuffer=100,         #Distance to buffer detected snow pixels (in meters). These pixels will no be labelled as snow, but will be masked
-    
-    snowWeight=0.50,        #What weight should we apply to snow observations in the spline?
-    snowFillVal=32767,      #Value to fill in for snow pixels
-
-    ## topo correction parameters specific to VI approach ##
-    numILclass=5,
-    numSamples=1000,
-    topoVIs=c('ndvi','nbr'),       #What indices to use to stratify the landscape
-    viQuantiles=0.9,          #What temporal quantiles to take for each VI (calculated annually)
-    requiredDoyStart=60,       #If the images for the first year don't go back until at least DOY 60, then use the next year's VIs
-    requiredDoyEnd=300,        #If the images for the most recent year don't go until at least DOY 300, then use the previous year's VIs
-    kmeansClasses=5,
-    kmeansIterations=500,
-    
-    r2_qa=0.75,            #Cuts offs for quality classes. If r2 of spline fit is less than 0.75, we are considering this a poor fit
-    maxGap_qa=c(20,35),    #Cuts offs for quality classes (high quality, moderate quality). Maximum image gap as a percentage of segment length
-
-    numLyrs=107,          #How many output layers are there?
-    runFmaskS30=TRUE,   #Should we rerun Fmask on sentinel images?
-    runOn='SCC'         #SCC or AWS. Needed for setting environmental variables for matlab
-  )
-  
-  return(pheno_pars)
-}
-
-
-
-
-#---------------------------------------------------------------------
 #Sort out image chunk boundaries
 #Douglas Bolton
 #---------------------------------------------------------------------
@@ -111,15 +39,15 @@ getMasks <-function(qaName) {
 
   #Make empty masks
   #Must have two separate masks, because pixels can have multiple labels (e.g., snow in fmask, cloud in lasrc)
-  mask <- as.integer(matrix(0,length(qaM),1))
-  snow <- as.integer(matrix(0,length(qaM),1))
+  mask <- matrix(FALSE,length(qaM),1)
+  snow <- matrix(FALSE,length(qaM),1)
 
   #Out of the image value for S30 is NA. Set mask to 1
-  mask[is.na(qaM)] <- 1
+  mask[is.na(qaM)] <- TRUE
   qaM[is.na(qaM)] <- 0
   
   #Out of the image value for L30 is 255. Set mask to 1
-  mask[qaM == 255] <- 1
+  mask[qaM == 255] <- TRUE
   qaM[qaM == 255] <- 0
   
   #If bits 6-7 are 11, 01 or 10 (high/average/low aerosol), don't label, just subtract values  (we aren't confident enough in these values yet)
@@ -131,14 +59,14 @@ getMasks <-function(qaName) {
   qaM[qaM >= 32] <- qaM[qaM >= 32] - 32
   
   #check if snow/ice, label snow layer as 1
-  snow[(qaM >= 16)] <- 1
+  snow[(qaM >= 16)] <- TRUE
   qaM[qaM >= 16] <- qaM[qaM >= 16] - 16
   
   #if cloud shadow, adjacent to cloud, cloud, or cirrus, label as 1
-  mask[(qaM >= 1)] <- 1
+  mask[(qaM >= 1)] <- TRUE
   
-  mask <- mask == 1
-  snow <- snow == 1
+  #mask <- mask == 1
+  #snow <- snow == 1
   
   out <- list(mask,snow)
   return(out)
@@ -153,7 +81,9 @@ getMasks <-function(qaName) {
 #If a chunk is empty (no data), don't write to disk. Huge I/O savings.
 #Douglas Bolton
 #---------------------------------------------------------------------
-ApplyMask_QA_and_Fmask <-function(imgName, tile, waterMask, tempFold, inDir, fmaskFunction, chunkStart, chunkEnd, topoMethod, pheno_pars, deleteInput=F) {
+ApplyMask_QA_and_Fmask <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, deleteInput=F) {
+  
+  pheno_pars <- params$phenology_parameters   #Pull phenology parameters
   
   #Get sensor, names sorted
   imgName_strip = tail(unlist(strsplit(imgName,'/')),n = 1)
@@ -162,99 +92,108 @@ ApplyMask_QA_and_Fmask <-function(imgName, tile, waterMask, tempFold, inDir, fma
   date = unlist(strsplit(imgName_strip,'.',fixed = T))[4]
   outBase = paste0('HLS_',sensor,'_',tileTxt,'_',date)
   
-  #Open the image bands
-  ##############################################################################
-  theBase <- paste0('HDF4_EOS:EOS_GRID:',imgName,':Grid:')
-  if (sensor == 'L30') {
-    blueName = paste0(theBase, 'band02'); greenName = paste0(theBase, 'band03')
-    redName = paste0(theBase, 'band04'); nirName = paste0(theBase, 'band05')
-    swirName = paste0(theBase, 'band06'); swir2Name = paste0(theBase, 'band07')
-  } else {
-    blueName = paste0(theBase, 'B02'); greenName = paste0(theBase, 'B03')
-    redName = paste0(theBase, 'B04'); nirName = paste0(theBase, 'B8A')
-    swirName = paste0(theBase, 'B11'); swir2Name = paste0(theBase, 'B12')} 
-  
-  blueVals = readGDAL(blueName,silent=T)$band1
-  greenVals = readGDAL(greenName,silent=T)$band1
-  redVals = readGDAL(redName,silent=T)$band1
-  nirVals = readGDAL(nirName,silent=T)$band1
-  swirVals = readGDAL(swirName,silent=T)$band1
-  swir2Vals = readGDAL(swir2Name,silent=T)$band1
-  
-  
   #Mask for clouds and snow. Use QA flags for Landsat. Impliment Fmask 4.0 for Sentinel
   ################################################################################
-  if (sensor == 'L30' | pheno_pars$runFmaskS30 == FALSE) {
+  if (sensor == 'L30' | params$setup$runFmaskSentinel == FALSE) {
     qaName = paste0('HDF4_EOS:EOS_GRID:',imgName, ':Grid:QA')
     maskList <- getMasks(qaName)
     mask <- maskList[[1]]
     snow <- maskList[[2]]
-    snow[waterMask==1] <- 0   #Remove snow flags that are over water
-  }
-  
-  if (sensor == 'S30' & pheno_pars$runFmaskS30 == TRUE) { 
-    fmaskFold <- paste0(tempFold,'fmask/')
-    #Execute system command to call fmask function
-    RunFmask(imgName, tile, inDir, fmaskFold, fmaskFold, fmaskFunction,pheno_pars) 
-    #Now read in that fmask layer
+    snow[waterMask] <- FALSE   #Remove snow flags that are over water
+    remove(maskList)
+  } else {
+    if (sensor == 'S30') {
+      fmaskName <- paste0(params$dirs$fmaskDir, gsub('hdf','',imgName_strip), "Fmask.tif")
+      if (!file.exists(fmaskName)) {
+        RunFmask(imgName, tile, params$dirs$imgDir, params$dirs$fmaskDir, params$dirs$fmaskDir, params)}
+    } else {
+      #If it's S10 data, resample fmask. A 30m version must already exist!
+      imgName_strip30 <- gsub(".S10",".S30",imgName_strip)
+      fmaskName <- paste0(params$dirs$fmask10m, gsub('hdf','',imgName_strip), "Fmask.tif")
+      if (!file.exists(fmaskName)) {
+        fmaskIn <- paste0(params$dirs$fmaskDir, gsub('hdf','',imgName_strip30), "Fmask.tif")
+        if (file.exists(fmaskIn)) {
+          run <- try({system2("gdalwarp",paste("-overwrite -r near -ts 10980 10980 -of GTiff",fmaskIn,fmaskName),stdout=T,stderr=T)},silent=T)
+        }
+      }
+    }
     
-    fmaskName <- paste0(fmaskFold, gsub('hdf','',imgName_strip), "Fmask.tif")
-    fmask <- readGDAL(fmaskName,silent=T)$band1     #If Fmask doesn't exist (didn't run), function will fail and error will be logged
-    mask <- (fmask == 4) | (fmask == 2) | (fmask == 255)  #If cloud, cloud shadow, or no data
-    snow  <- fmask == 3
-    snow[waterMask==1] <- 0  #Remove snow flags that are over water (shouldn't be any though)
+    logIt <- try({
+      fmask <- readGDAL(fmaskName,silent=T)$band1     #If Fmask doesn't exist (didn't run), function will fail and error will be logged
+      mask <- (fmask == 4) | (fmask == 2) | (fmask == 255)  #If cloud, cloud shadow, or no data
+      snow  <- fmask == 3
+      snow[waterMask] <- FALSE  #Remove snow flags that are over water (shouldn't be any though)
+      remove(fmask)
+    },silent=TRUE)
+    
+    if (inherits(logIt, 'try-error')) {
+      qaName = paste0('HDF4_EOS:EOS_GRID:',imgName, ':Grid:QA')    #If there was an error with fmask, just use HLS QA
+      maskList <- getMasks(qaName)
+      mask <- maskList[[1]]
+      snow <- maskList[[2]]
+      snow[waterMask] <- FALSE   #Remove snow flags that are over water
+      remove(maskList)
+      print(paste('Using backup mask for',imgName))}
   }
   
+  #Open the image bands
+  ##############################################################################
+  theBase <- paste0('HDF4_EOS:EOS_GRID:',imgName,':Grid:')
+  if (sensor == 'L30') {
+      bNames <- c('band02','band03','band04','band05','band06','band07')
+      bands <- matrix(as.integer(0),length(mask),length(bNames))
+      for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
+
+  } else if (sensor == 'S30') {
+     bNames <- c('B02','B03','B04','B8A','B11','B12','B05','B06','B07')
+     bands <- matrix(as.integer(0),length(mask),length(bNames))
+     for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
+     
+  } else if (sensor == 'S10') {
+    #Need to get all bands to 10m first. Using Broad band NIR (10m) instead of Narrow (20m)
+    bNames <- c('B08','B11','B12','B05','B06','B07')
+    tifBase <- paste0(params$dirs$tempDir,gsub('hdf','',imgName_strip))
+    for (bName in bNames) {
+      inName <- paste0(theBase,bName);outName <- paste0(tifBase,bName,'.tif')
+      run <- try({system2("gdalwarp",paste("-overwrite -r near -ts 10980 10980 -of GTiff",inName,outName),stdout=T,stderr=T)},silent=T)
+    }
+
+    fullNames <- c(paste0(theBase, c('B02','B03','B04')), 
+                   paste0(tifBase,bNames,'.tif'))
+    
+    bands <- matrix(as.integer(0),length(mask),length(fullNames))
+    for (i in 1:length(fullNames)) {bands[,i] <- as.integer(readGDAL(fullNames[i],silent=T)$band1*10000)}
+    
+    for (bName in bNames) {file.remove(paste0(tifBase,bName,'.tif'))}
+
+  }
+  
+
   #If we aren't topo correcting, then we need to do the NDMI check now. If we are topo correcting, we will do this check after topo correction
   #If NDMI > 0.5 AND the pixel is within 5 km of detected snow, then mask
-  if (topoMethod == 'None') {
+  if (!params$topocorrection_parameters$topoCorrect) {
     if (sum(snow) > 0) {
-      ndmi <- calcIndex(nir=nirVals/10000,swirOne=swirVals/10000,whatIndex='ndmi')
-      ndmiCheck = ndmi > pheno_pars$ndmiSnowThresh   #Find pixels that meet threshold (potential snow pixels)
-  
-      #We will only keep snow pixels when 50% of 5x5 pixel window is also snow (to remove speckle)
-      imBlur  <- boxblur(as.cimg(matrix(snow,length(snow)^.5,length(snow)^.5)),pheno_pars$snowWindow,neumann = FALSE)    #neumann = FALSE assumes snow values of zero outside image edges
-      snowCheck <- imBlur > pheno_pars$snowFraction & snow == 1
-      
-      #Calcuate the distance from each pixel to the nearest pixel detected as snow by fmask or lasrc
-      sD <- matrix(as.matrix(distance_transform(snowCheck,1)),length(snow),1)
-      sCheck <- (sD*30) < pheno_pars$distanceToSnow  #Find pixels where distance to snow is less than threshold (5 km)
-      
-      #Find pixels meeting ndmi rule that are within 5km of detected snow pixels (or pixels already detected as snow)
-      toMask <- (ndmiCheck & sCheck) | snow == 1 
-      
-      #Buffer snow pixels by 100m
-      mD <- matrix(as.matrix(distance_transform(as.cimg(matrix(toMask,length(snow)^.5,length(snow)^.5)),1)),length(snow),1)
-      buffer <- (mD*30) < pheno_pars$snowBuffer
-      
-      #Mask these pixels. BUT we won't label as snow, as our confidence is lower, and we don't want to falsely fill dormant values. 
-      mask[buffer]  <- TRUE
-      
-      #rast <- raster(blueName)
-      #snowRast <- setValues(rast, toMask)
-      #writeRaster(snowRast,filename='~/testSnow2.tif',format='GTiff',overwrite=TRUE)
-    }   
+      additional_snow_mask <- runSnowScreen(snow,bands[,4],bands[,5],params)
+      mask[additional_snow_mask] <- TRUE
+      remove(additional_snow_mask)}
   }
-  
-  
-  bands <- cbind(blueVals,greenVals,redVals,nirVals,swirVals,swir2Vals)
+      
+
   bands[bands < 0] <- NA    #Remove negative reflectance values
-  bands[mask==1,]  <-  NA
-  bands[waterMask==1,]  <-  NA
+  bands[mask,]  <-  NA
+  bands[waterMask,]  <-  NA
   
   #Mask pixels that have missing data in ANY band. These are likely problem pixels (and we need most bands for despiking, kmeans, snow detection, etc).
   check <- rowSums(is.na(bands)) > 0
   bands[check,] <- NA
   
-  bands <- round(bands * 10000)    #multiply by 10000 so we can store as integer
-  
   #We remove potentially snowy observations using NDMI, but we are only going to label pixels that were actually detected as snow as snow
-  bands[snow==1,]  <-  pheno_pars$snowFillVal    
+  bands[snow,]  <-  as.integer(pheno_pars$snowFillVal)    
 
   for (n in 1:length(chunkStart)) {
-    mat <- bands[chunkStart[n]:chunkEnd[n],]
+    mat <- as.integer(bands[chunkStart[n]:chunkEnd[n],])
     if (all(is.na(mat))) {next} #if there is no good data in the chunk, move to next chunk
-    saveRDS(as.integer(mat),paste0(tempFold,'c',n,'/',outBase,'.Rds'))
+    saveRDS(mat,paste0(params$dirs$chunkDir,'c',n,'/',outBase,'.Rds'))
   }
   #If requested, delete the input file once it is processed
   if (deleteInput == TRUE) {file.remove(imgName)}
@@ -263,18 +202,18 @@ ApplyMask_QA_and_Fmask <-function(imgName, tile, waterMask, tempFold, inDir, fma
 
 
 
-RunFmask <-function(imgName, tile, auxFold, fmaskFold, outDir, fmaskFunction, pheno_pars) {
+RunFmask <-function(imgName, tile, auxFold, fmaskFold, outDir, params) {
   
   #Different approach depending on if we are on SCC or AWS
   #If on SCC, need to set environmental variables 
-  if (pheno_pars$runOn == 'SCC') {
+  if (params$setup$AWS_or_SCC == 'SCC') {
     system(paste('MCRROOT="/share/pkg/matlab/2018b/install"',
                  'LD_LIBRARY_PATH=.:${MCRROOT}/runtime/glnxa64',
                  'LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/bin/glnxa64',
                  'LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/sys/os/glnxa64',
                  'LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/sys/opengl/lib/glnxa64',
                  'export LD_LIBRARY_PATH',
-                 paste('eval',fmaskFunction,tile,imgName,auxFold,fmaskFold),sep='\n'))
+                 paste('eval',params$setup$fmaskFunction,tile,imgName,auxFold,fmaskFold),sep='\n'))
   
    } else {
 
@@ -297,8 +236,8 @@ RunFmask <-function(imgName, tile, auxFold, fmaskFold, outDir, fmaskFunction, ph
     #Get sun zenith and azimuth.
     #Some L8 scenes will have two values (two L8 images as inputs). We will take the average of these two values
     info = gdalinfo(imgName)
-    ulx <- as.numeric(unlist(strsplit(info[pmatch('  ULX',info)],'='))[2]) + 15    #Adjust for matlab (needs center of pixel)
-    uly <- as.numeric(unlist(strsplit(info[pmatch('  ULY',info)],'='))[2]) - 15    #Adjust for matlab (needs center of pixel)
+    ulx <- as.numeric(unlist(strsplit(info[pmatch('  ULX',info)],'='))[2]) + params$setup$image_res/2    #Adjust for matlab (needs center of pixel)
+    uly <- as.numeric(unlist(strsplit(info[pmatch('  ULY',info)],'='))[2]) - params$setup$image_res/2    #Adjust for matlab (needs center of pixel)
     sza <- as.numeric(unlist(strsplit(info[pmatch('  MEAN_SUN_ZENITH_ANGLE(B01)',info)],'='))[2])
     saa <- as.numeric(unlist(strsplit(info[pmatch('  MEAN_SUN_AZIMUTH_ANGLE(B01)',info)],'='))[2])
     vza <- as.numeric(unlist(strsplit(info[pmatch('  MEAN_VIEW_ZENITH_ANGLE(B01)',info)],'='))[2])
@@ -308,7 +247,7 @@ RunFmask <-function(imgName, tile, auxFold, fmaskFold, outDir, fmaskFunction, ph
     zone <- zone[length(zone)]
     zone <- as.numeric(substr(zone,1,2))
   
-    system(paste('eval',fmaskFunction,tile,fileBase,auxFold,fmaskFold,zone,ulx,uly,sza,saa,vza,vaa)) 
+    system(paste('eval',params$setup$fmaskFunction,tile,fileBase,auxFold,fmaskFold,zone,ulx,uly,sza,saa,vza,vaa)) 
     
     #Delete the temporary images
     for (b in bandNames) {file.remove(paste0(fileBase,b,'.tif'))}
@@ -317,63 +256,109 @@ RunFmask <-function(imgName, tile, auxFold, fmaskFold, outDir, fmaskFunction, ph
 
 
 
+
+
+#
+#---------------------------------------------------------------------
+#Run additional snow screening
+#If NDMI > 0.5 AND the pixel is within 5 km of detected snow, then mask pixel
+#Douglas Bolton
+#---------------------------------------------------------------------
+runSnowScreen <- function(snow, nir, swir1, params) {
+  pheno_pars <- params$phenology_parameters
+  
+  ndmi <- calcIndex(nir=nir,swirOne=swir1,whatIndex='ndmi')
+  ndmiCheck = ndmi > pheno_pars$ndmiSnowThresh   #Find pixels that meet threshold (potential snow pixels)
+  remove(ndmi)
+  
+  #We will only keep snow pixels when 50% of 5x5 pixel window is also snow (to remove speckle)
+  imBlur  <- boxblur(as.cimg(matrix(snow,length(snow)^.5,length(snow)^.5)),pheno_pars$snowWindow,neumann = FALSE)    #neumann = FALSE assumes snow values of zero outside image edges
+  snowCheck <- imBlur > pheno_pars$snowFraction & snow
+  remove(imBlur)
+  
+  #Calcuate the distance from each pixel to the nearest pixel detected as snow by fmask or lasrc
+  sD <- matrix(as.matrix(distance_transform(snowCheck,1)),length(snow),1)
+  sCheck <- (sD*params$setup$image_res) < pheno_pars$distanceToSnow  #Find pixels where distance to snow is less than threshold (5 km)
+  remove(snowCheck)
+  remove(sD)
+  
+  #Find pixels meeting ndmi rule that are within 5km of detected snow pixels (or pixels already detected as snow)
+  toMask <- (ndmiCheck & sCheck) | snow
+  remove(ndmiCheck)
+  remove(sCheck)
+  
+  #Buffer snow pixels by 100m
+  mD <- matrix(as.matrix(distance_transform(as.cimg(matrix(toMask,length(snow)^.5,length(snow)^.5)),1)),length(snow),1)
+
+  additional_snow_mask <- (mD*params$setup$image_res) < pheno_pars$snowBuffer
+
+  #Mask these pixels. BUT we won't label as snow, as our confidence is lower, and we don't want to falsely fill dormant values. 
+
+  return(additional_snow_mask)
+}
+
+
 #---------------------------------------------------------------------
 #Calculate annual quantiles for spectral indices
 #We will use these quantiles to create kmeans classes for topographic correction
 #Douglas Bolton
 #---------------------------------------------------------------------
-getIndexQuantile <- function(chunk, numPix, tempFold, yr, errorLog, pheno_pars) {
+getIndexQuantile <- function(chunk, numPix, yr, errorLog, params) {
+  
+  topo_pars <- params$topocorrection_parameters  #isolate topo parameters
   
   #Make empty output
-  indexOut <- matrix(NA,numPix,length(pheno_pars$topoVIs)*length(pheno_pars$viQuantiles))
+  indexOut <- matrix(NA,numPix,length(topo_pars$topoVIs)*length(topo_pars$viQuantiles))
   
-  #Get all images to process
-  ######################
-  chunkFold <- paste0(tempFold,'c',chunk,'/') 
-  imgList <- list.files(path=chunkFold, pattern=glob2rx("HLS_*.Rds"), full.names=F)
-  numImgs <- length(imgList)
+  log <- try({
   
-  if (numImgs > 0) {
-    yrdoy <- as.numeric(matrix(NA,numImgs,1))
-    for (i in 1:numImgs) {
-      imName <- gsub('.Rds','',imgList[i])
-      yrdoy[i] <- as.numeric(unlist(strsplit(imName,'_',fixed = T))[4])}
-    years <- as.numeric(format(as.Date(strptime(yrdoy, format="%Y%j")),'%Y'))
-  
-    imgList <- imgList[years == yr]   #Restrict to images in target year
+    #Get all images to process
+    ######################
+    chunkFold <- paste0(params$dirs$chunkDir,'c',chunk,'/') 
+    imgList <- list.files(path=chunkFold, pattern=glob2rx("HLS_*.Rds"), full.names=F)
     numImgs <- length(imgList)
     
-    #Only run if more than one image in target year
-    if (numImgs > 1) {
-      b1 = matrix(NA,numPix,numImgs); b2 = matrix(NA,numPix,numImgs)
-      b3 = matrix(NA,numPix,numImgs); b4 = matrix(NA,numPix,numImgs)
-      b5 = matrix(NA,numPix,numImgs); b6 = matrix(NA,numPix,numImgs)
+    if (numImgs > 0) {
+      yrdoy <- as.numeric(matrix(NA,numImgs,1))
       for (i in 1:numImgs) {
-        imgData <- try(matrix(readRDS(paste0(chunkFold,imgList[i])),numPix,6),silent = TRUE)
-        if (inherits(imgData, 'try-error')) {cat(paste('getIndexQuantile: Error for chunk',chunk,imgList[i]), file=errorLog, append=T);next} 
-        imgData[imgData == pheno_pars$snowFillVal] <- NA
-        imgData <- imgData / 10000
-        b1[,i] <- imgData[,1]; b2[,i] <- imgData[,2]; b3[,i] <- imgData[,3]
-        b4[,i] <- imgData[,4]; b5[,i] <- imgData[,5]; b6[,i] <- imgData[,6]
-      }
+        imName <- gsub('.Rds','',imgList[i])
+        yrdoy[i] <- as.numeric(unlist(strsplit(imName,'_',fixed = T))[4])}
+      years <- as.numeric(format(as.Date(strptime(yrdoy, format="%Y%j")),'%Y'))
+    
+      imgList <- imgList[years == yr]   #Restrict to images in target year
+      numImgs <- length(imgList)
       
-      #Loop through requested indices in pheno_pars$topoVIs
-      #For each index, loop through requested quantiles in pheno_pars$viQuantiles
-      column <- 0
-      for (i in 1:length(pheno_pars$topoVIs)) { 
-        ind <- calcIndex(blue=b1,green=b2,red=b3,nir=b4,swirOne=b5,swirTwo=b6,whatIndex=pheno_pars$topoVIs[i])
-        ind[is.infinite(ind)] <- NA
-        for (j in 1:length(pheno_pars$viQuantiles)) {
-          column <- column + 1
-          indexOut[,column] <- rowQuantileC(ind,pheno_pars$viQuantiles[j])
+      #Only run if more than one image in target year
+      if (numImgs > 1) {
+        b2 <- matrix(NA,numPix,numImgs); b3 <- matrix(NA,numPix,numImgs)
+        b4 <- matrix(NA,numPix,numImgs); b5 <- matrix(NA,numPix,numImgs)
+        b6 <- matrix(NA,numPix,numImgs); b7 <- matrix(NA,numPix,numImgs)
+        for (i in 1:numImgs) {
+          imgData <- try(matrix(readRDS(paste0(chunkFold,imgList[i])),nrow=numPix),silent = TRUE)
+          if (inherits(imgData, 'try-error')) {cat(paste('getIndexQuantile: Error for chunk',chunk,imgList[i]), file=errorLog, append=T);next} 
+          imgData[imgData == params$phenology_parameters$snowFillVal] <- NA
+          imgData <- imgData / 10000
+          b2[,i] <- imgData[,1]; b3[,i] <- imgData[,2]; b4[,i] <- imgData[,3]
+          b5[,i] <- imgData[,4]; b6[,i] <- imgData[,5]; b7[,i] <- imgData[,6]
+        }
+        
+        #Loop through requested indices in topo_pars$topoVIs
+        #For each index, loop through requested quantiles in topo_pars$viQuantiles
+        column <- 0
+        for (i in 1:length(topo_pars$topoVIs)) { 
+          ind <- calcIndex(blue=b2,green=b3,red=b4,nir=b5,swirOne=b6,swirTwo=b7,whatIndex=topo_pars$topoVIs[i])
+          ind[is.infinite(ind)] <- NA
+          for (j in 1:length(topo_pars$viQuantiles)) {
+            column <- column + 1
+            indexOut[,column] <- rowQuantileC(ind,topo_pars$viQuantiles[j])
+          }
         }
       }
     }
-  }
+  },silent=T)
+  
   return(indexOut)
 }
-
-
 
 
 
@@ -382,18 +367,21 @@ getIndexQuantile <- function(chunk, numPix, tempFold, yr, errorLog, pheno_pars) 
 #Overwrite existing image chunks with new, corrected data
 #Douglas Bolton
 #---------------------------------------------------------------------
-runTopoCorrection <- function(imgName, tempFold, groups, slopeVals, aspectVals, chunkStart,chunkEnd, errorLog, pheno_pars, writeImages=FALSE, slope=FALSE) {
+runTopoCorrection <- function(imgName, groups, slopeVals, aspectVals, chunkStart,chunkEnd, errorLog, params, writeImages=FALSE, slope=NULL) {
+  
+  pheno_pars <- params$phenology_parameters
+  topo_pars <- params$topocorrection_parameters
   
   #Get sensor, names sorted
-  imgName_strip = tail(unlist(strsplit(imgName,'/')),n = 1)
-  sensor = unlist(strsplit(imgName_strip,'.',fixed = T))[2]
-  tileTxt = unlist(strsplit(imgName_strip,'.',fixed = T))[3]
-  date = unlist(strsplit(imgName_strip,'.',fixed = T))[4]
-  outBase = paste0('HLS_',sensor,'_',tileTxt,'_',date)
+  imgName_strip <- tail(unlist(strsplit(imgName,'/')),n = 1)
+  sensor <- unlist(strsplit(imgName_strip,'.',fixed = T))[2]
+  tileTxt <- unlist(strsplit(imgName_strip,'.',fixed = T))[3]
+  date <- unlist(strsplit(imgName_strip,'.',fixed = T))[4]
+  outBase <- paste0('HLS_',sensor,'_',tileTxt,'_',date)
 
   #Get sun zenith and azimuth.
   #Some L8 scenes will have two values (two L8 images as inputs). We will take the average of these two values
-  info = gdalinfo(imgName)
+  info <- gdalinfo(imgName)
   line <- info[pmatch('  MEAN_SUN_ZENITH_ANGLE',info)]
   line <- unlist(strsplit(line,'='))[2]
   zMean <- mean(as.numeric(unlist(strsplit(line,','))))
@@ -405,14 +393,16 @@ runTopoCorrection <- function(imgName, tempFold, groups, slopeVals, aspectVals, 
   sunazimuth <- (pi/180) * aMean
   
   numChunks <- length(chunkEnd)
-  bands <- matrix(NA,chunkEnd[numChunks],6)
-
+  
+  if (sensor == 'L30') {bands <- matrix(NA,chunkEnd[numChunks],6)}
+  if (sensor == 'S30' | sensor == 'S10') {bands <- matrix(NA,chunkEnd[numChunks],9)}
+  
   #Reconstruct each image from the chunked data
   for (n in 1:numChunks) {
-    fName <- paste0(tempFold,'c',n,'/',outBase,'.Rds')
+    fName <- paste0(params$dirs$chunkDir,'c',n,'/',outBase,'.Rds')
     if (file.exists(fName)) {
       numPix <- length(chunkStart[n]:chunkEnd[n])
-      imgData <- try(matrix(readRDS(fName),numPix,6),silent = TRUE)
+      imgData <- try(matrix(readRDS(fName),nrow=numPix),silent = TRUE)
       if (inherits(imgData, 'try-error')) {cat(paste('runTopoCorrection: Error for chunk',n,outBase), file=errorLog, append=T);next} 
       bands[chunkStart[n]:chunkEnd[n],] <- imgData
       remove(imgData)
@@ -422,46 +412,28 @@ runTopoCorrection <- function(imgName, tempFold, groups, slopeVals, aspectVals, 
   
   if (!all(is.na(bands))) {                   #Only continue if there is actually good data
     
-    snow <- bands[,1] == pheno_pars$snowFillVal     #Determine snow pixels
-    snow[is.na(snow)] <- FALSE                      #Set NA snow values to FALSE (no snow)
-    bands[bands == pheno_pars$snowFillVal] = NA     #Mask snow values
+    snow <- bands[,1] == pheno_pars$snowFillVal       #Determine snow pixels
+    snow[is.na(snow)] <- FALSE                        #Set NA snow values to FALSE (no snow)
+    bands[bands == pheno_pars$snowFillVal] <-  NA     #Mask snow values
     bands  <- bands / 10000                         
     
     #If image outputs are requested, create a base name for plots
     plotBaseName <- NULL
-    if (writeImages) {plotBaseName <- paste0(tempFold,'IL_plots/',outBase)}   #Base name for outputing scatterplots
+    if (writeImages) {plotBaseName <- paste0(params$dirs$tempDir,'IL_plots/',outBase)}   #Base name for outputing scatterplots
 
     #Run topographic correction function by kmeans group
     corr <- topocorr_rotational_by_group(x=bands,groups=groups, 
                                            slope=slopeVals,aspect=aspectVals, 
-                                           sunzenith = sunzenith, sunazimuth=sunazimuth,pheno_pars,plotBaseName)
+                                           sunzenith = sunzenith, sunazimuth=sunazimuth,topo_pars,plotBaseName)
 
     #NDMI check
     #Now that we have topo corrected the imagery, let's check for potentail snow....
     #If NDMI > 0.5 AND the pixel is within 5 km of detected snow, then mask pixel
     if (sum(snow) > 0) {
-      ndmi <- calcIndex(nir=corr[,4],swirOne=corr[,5],whatIndex='ndmi')
-      ndmiCheck = ndmi > pheno_pars$ndmiSnowThresh   #Find pixels that meet threshold (potential snow pixels)
+      additional_snow_mask <- runSnowScreen(snow,corr[,4],corr[,5],params)
+      corr[additional_snow_mask,]  <- NA}
       
-      #We will only keep snow pixels when 50% of 5x5 pixel window is also snow (to remove speckle)
-      imBlur  <- boxblur(as.cimg(matrix(snow,length(snow)^.5,length(snow)^.5)),pheno_pars$snowWindow,neumann = FALSE)    #neumann = FALSE assumes snow values of zero outside image edges
-      snowCheck <- imBlur > pheno_pars$snowFraction & snow == 1
-      
-      #Calcuate the distance from each pixel to the nearest pixel detected as snow by fmask or lasrc
-      sD <- matrix(as.matrix(distance_transform(snowCheck,1)),length(snow),1)
-      sCheck <- (sD*30) < pheno_pars$distanceToSnow  #Find pixels where distance to snow is less than threshold (5 km)
-      
-      #Find pixels meeting ndmi rule that are within 5km of detected snow pixels (or pixels already detected as snow)
-      toMask <- (ndmiCheck & sCheck) | snow == 1 
-      
-      #Buffer snow pixels by 100m
-      mD <- matrix(as.matrix(distance_transform(as.cimg(matrix(toMask,length(snow)^.5,length(snow)^.5)),1)),length(snow),1)
-      buffer <- (mD*30) < pheno_pars$snowBuffer
-      
-      #Mask these pixels
-      corr[buffer,]  <- NA
-    } 
-    
+
     corr = round(corr * 10000)                  #Convert back to integer
     corr[corr < 0]  <-  NA                      #Remove negative reflectance values
     
@@ -470,12 +442,12 @@ runTopoCorrection <- function(imgName, tempFold, groups, slopeVals, aspectVals, 
     corr[check,] <- NA
     
     #We removed potentially snowy observations using NDMI, but we are only going to label pixels that were actually detected as snow (this impacts dormant filling)
-    corr[snow==1,]  <-  pheno_pars$snowFillVal   
+    corr[snow,]  <-  pheno_pars$snowFillVal   
     corr <- round(corr)
     
     #Overwrite existing chunks with new corrected data
     for (n in 1:numChunks) {
-      fName <- paste0(tempFold,'c',n,'/',outBase,'.Rds')
+      fName <- paste0(params$dirs$chunkDir,'c',n,'/',outBase,'.Rds')
       if (file.exists(fName)) {file.remove(fName)}  #Delete the existing file. We will write the topo corrected file to the same location
       mat <- corr[chunkStart[n]:chunkEnd[n],]
       if (all(is.na(mat))) {next} #if there is no good data in the chunk, move to next chunk
@@ -488,14 +460,14 @@ runTopoCorrection <- function(imgName, tempFold, groups, slopeVals, aspectVals, 
       ##Write out a corrected version. Put snow back to NA
       corr[corr == pheno_pars$snowFillVal] = NA
       after <- stack(setValues(slope,corr[,5]),setValues(slope,corr[,4]),setValues(slope,corr[,3]))   #SWIR/NIR/RED composite
-      afterName <- paste0(tempFold,'/sampleImages/',outBase,'_corrected.tif')
+      afterName <- paste0(params$dirs$tempDir,'/sampleImages/',outBase,'_corrected.tif')
       writeRaster(after,filename=afterName,format='GTiff',overwrite=TRUE,datatype=dType)
       
       ##Write out an uncorrected version
       bands = round(bands * 10000)
       bands <- round(bands)
       before <- stack(setValues(slope,bands[,5]),setValues(slope,bands[,4]),setValues(slope,bands[,3])) #SWIR/NIR/RED composite
-      beforeName <- paste0(tempFold,'/sampleImages/',outBase,'.tif')
+      beforeName <- paste0(params$dirs$tempDir,'/sampleImages/',outBase,'.tif')
       writeRaster(before,filename=beforeName,format='GTiff',overwrite=TRUE,datatype=dType) 
     }
   }   
@@ -508,17 +480,18 @@ runTopoCorrection <- function(imgName, tempFold, groups, slopeVals, aspectVals, 
 #Write phenology results for each chunk to disk
 #Douglas Bolton
 #---------------------------------------------------------------------
-runPhenoChunk <- function(chunk, tempFold, startYear, endYear, errorLog, pheno_pars, dataFill) {
+runPhenoChunk <- function(chunk, numPix, imgYrs, phenYrs, errorLog, params) {
 
+    pheno_pars <- params$phenology_parameters
+  
     #Get all images to process
     ######################
-    chunkFold <- paste0(tempFold,'c',chunk,'/') 
-    outFold <-   paste0(tempFold,'outputs/')  
+    chunkFold <- paste0(params$dirs$chunkDir,'c',chunk,'/') 
+    outFold <-   paste0(params$dirs$tempDir,'outputs/')  
     
     imgList <- list.files(path=chunkFold, pattern=glob2rx("HLS_*.Rds"), full.names=F)
     
     numImgs = length(imgList)
-    numPix = length(readRDS(paste0(chunkFold,imgList[1]))) / 6
     
     yrdoy = as.numeric(matrix(NA,numImgs,1))
     for (i in 1:numImgs) {
@@ -528,110 +501,101 @@ runPhenoChunk <- function(chunk, tempFold, startYear, endYear, errorLog, pheno_p
     ord = order(yrdoy)  #Determine image order
     
     #Read in all imagery for chunk
-    b1 = matrix(NA,numPix,numImgs); b2 = matrix(NA,numPix,numImgs); b3 = matrix(NA,numPix,numImgs)
-    b4 = matrix(NA,numPix,numImgs); b5 = matrix(NA,numPix,numImgs); b6 = matrix(NA,numPix,numImgs)
-    sensor = as.character(rep('',numImgs))
+    b2 <- matrix(NA,numPix,numImgs);  b3 <- matrix(NA,numPix,numImgs);  b4 <- matrix(NA,numPix,numImgs)
+    b5 <- matrix(NA,numPix,numImgs);  b6 <- matrix(NA,numPix,numImgs);  b7 <- matrix(NA,numPix,numImgs)
+    re1 <- matrix(NA,numPix,numImgs); re2 <- matrix(NA,numPix,numImgs); re3 <- matrix(NA,numPix,numImgs) 
+    
+    sensor <- as.character(rep('',numImgs))
     
     for (i in 1:length(ord)) {
       img <- imgList[ord[i]]
-      imgData <- try(matrix(readRDS(paste0(chunkFold,img)),numPix,6),silent = TRUE)
+      imgData <- try(matrix(readRDS(paste0(chunkFold,img)),nrow=numPix),silent = TRUE)
       if (inherits(imgData, 'try-error')) {cat(paste('runPhenoChunk: Error for chunk',chunk,img), file=errorLog, append=T);next} 
       
-      b1[,i] <- imgData[,1]; b2[,i] <- imgData[,2]; b3[,i] <- imgData[,3]
-      b4[,i] <- imgData[,4]; b5[,i] <- imgData[,5]; b6[,i] <- imgData[,6]
+      b2[,i] <- imgData[,1]; b3[,i] <- imgData[,2]; b4[,i] <- imgData[,3]
+      b5[,i] <- imgData[,4]; b6[,i] <- imgData[,5]; b7[,i] <- imgData[,6]
+      
       sensor[i] = unlist(strsplit(img,'_',fixed = T))[2]
+      
+      #If there are more than 7 bands, fill in the red edge bands
+      if (sensor[i] == 'S30' | sensor[i] == 'S10') {
+        re1[,i] <- imgData[,7]; re2[,i] <- imgData[,8]; re3[,i] <- imgData[,9]
+      }
+
       remove(imgData)
     }
     
     dates = as.Date(strptime(yrdoy[ord], format="%Y%j"))  #Format as dates
     
     #Get snow pixels to fill 
-    snowPix <- b1 == pheno_pars$snowFillVal
+    snowPix <- b2 == pheno_pars$snowFillVal
     snowPix[is.na(snowPix)] <- FALSE
     
     #Set snow pixels to NA
-    b1[snowPix] <- NA; b2[snowPix] <- NA; b3[snowPix] <- NA
-    b4[snowPix] <- NA; b5[snowPix] <- NA; b6[snowPix] <- NA
+    b2[snowPix] <- NA; b3[snowPix] <- NA; b4[snowPix] <- NA
+    b5[snowPix] <- NA; b6[snowPix] <- NA; b7[snowPix] <- NA 
+    re1[snowPix] <- NA; re2[snowPix] <- NA; re3[snowPix] <- NA 
     
     
-    
-    
-    #Temporary mask of late date 
-    ###########################################################
-    # test <- dates < as.Date('2019-04-15')
-    # dates <- dates[test]
-    # snowPix <- snowPix[,test]
-    # b1 <- b1[,test]
-    # b2 <- b2[,test]
-    # b3 <- b3[,test]
-    # b4 <- b4[,test]
-    # b5 <- b5[,test]
-    # b6 <- b6[,test]
-    # sensor <- sensor[test]
-    
-    
-    
-    
-    #Calculate EVI2, mask negative values
-    evi2 <- calcIndex(red=b3/10000,nir=b4/10000,whatIndex='evi2')
-    evi2[evi2 <= 0] <- NA   
+    #Calculate index, mask negative values
+    vi <- calcIndex(blue=b2/10000,green=b3/10000,red=b4/10000,
+                    nir=b5/10000,swirOne=b6/10000,swirTwo=b7/10000,
+                    edge1=re1/10000,edge2=re2/10000,edge3=re3/10000,
+                    whatIndex=pheno_pars$vegetation_index)
+    if (pheno_pars$maskNegativeValues) {vi[vi < 0] <- NA}       #Option to mask negative values (defined in json file)
     
     #Average images that occur on the same day
     #Only keep the snow flag if both images on the day were classified as snow
-    imgData <- averageDuplicates(list(b1, b2, b3, b4, b5, b6, evi2), snowPix, sensor, dates)
+    imgData <- averageDuplicates(list(b2, b3, b4, b5, b6, b7, vi), snowPix, sensor, dates)
     
     #Extract data from listd
     bands <- imgData[[1]]; snowPix <- imgData[[2]]; sensor <- imgData[[3]]; dates <- imgData[[4]] 
-    b1 <- bands[[1]];  b2 <- bands[[2]];  b3 <- bands[[3]]; 
-    b4 <- bands[[4]]; b5 <- bands[[5]]; b6 <- bands[[6]]
-    evi2 <- bands[[7]]
+    b2 <- bands[[1]];  b3 <- bands[[2]]; b4 <- bands[[3]]
+    b5 <- bands[[4]]; b6 <- bands[[5]]; b7 <- bands[[6]];
+    vi <- bands[[7]]
     remove(imgData)
     remove(bands)
     
-    
-    yrs <- seq(startYear,endYear)
-    splineStart <- as.Date(as.Date(paste0(yrs,'-01-01')) - pheno_pars$splineBuffer) 
-    numDaysFit  <-  365 + (pheno_pars$splineBuffer * 2)
-    pheno_pars$halfLyrs <- (pheno_pars$numLyrs-1)/2    #Number of layers that require filling if there is no second cycle. First cycle has 7 extra layers
-    
+
+    #Define the start and end to the buffer period
+    #If it is a leap year, there will be one more day in target year, one less day in the following buffer period
+    splineStart <- as.Date(as.Date(paste0(imgYrs,'-01-01')) - pheno_pars$splineBuffer) 
+    numDaysFit  <-  365 + (pheno_pars$splineBuffer * 2)    
+    splineEnd <- splineStart+(numDaysFit-1)
     
     #Repeat data for the buffer period of the final year to ensure that the spline gets tied down
     #Determine the most recent image, and then fill BEYOND that date until the spline buffer is reached
     #Filling with images from the previous year
     #########################################################################
-    startFillDate <- max(dates) - 365    #Find the most recent image, and then subtract a year
-    endFillDate <- as.Date(paste0(endYear,'-01-01')) + pheno_pars$splineBuffer   #Find the upper bound that needs to be filled
+    startFillDate <- max(dates)+1   #Find the most recent image, and then subtract a year 
+    endFillDate <- as.Date(paste0(max(imgYrs)+1,'-01-01')) + pheno_pars$splineBuffer #This is the    
     
-    vals <- dates > startFillDate & dates < endFillDate  
-    b1_add <- b1[,vals];b2_add <- b2[,vals];b3_add <- b3[,vals]
-    b4_add <- b4[,vals];b5_add <- b5[,vals];b6_add <- b6[,vals]
-    evi2_add <- evi2[,vals]
-    snow_add <- snowPix[,vals]
-    dates_add <- dates[vals] + 365
-    
-    b1 <- cbind(b1,b1_add);b2 <- cbind(b2,b2_add);b3 <- cbind(b3,b3_add);
-    b4 <- cbind(b4,b4_add);b5 <- cbind(b5,b5_add);b6 <- cbind(b6,b6_add);
-    evi2 <- cbind(evi2,evi2_add);
-    snowPix <- cbind(snowPix,snow_add);
-    dates <- c(dates,dates_add)
+    if (startFillDate < endFillDate) {
+      vals <- dates > (startFillDate-365) & dates <= (endFillDate-365)   #Get images from year before and repeat them
+      b2_add <- b2[,vals]; b3_add <- b3[,vals]; b4_add <- b4[,vals]
+      b5_add <- b5[,vals]; b6_add <- b6[,vals]; b7_add <- b7[,vals]
+      vi_add <- vi[,vals]
+      snow_add <- snowPix[,vals]
+      dates_add <- dates[vals] + 365
+      
+      b2 <- cbind(b2,b2_add); b3 <- cbind(b3,b3_add); b4 <- cbind(b4,b4_add)
+      b5 <- cbind(b5,b5_add); b6 <- cbind(b6,b6_add); b7 <- cbind(b7,b7_add);
+      vi <- cbind(vi,vi_add);
+      snowPix <- cbind(snowPix,snow_add);
+      dates <- c(dates,dates_add)
+    }
     
     
     #Loop through each pixel and estimate phenometrics
-    #Run DoPhenologyHLS_Climatology if we want to fill gaps with other years. Otherwise run DoPhenologyHLS.
-    pheno_mat <- matrix(NA,numPix,pheno_pars$numLyrs*length(yrs))
-    if (dataFill) {
-        for (i in 1:numPix) {pheno_mat[i,] <- DoPhenologyHLS_Climatology(b1[i,],  b2[i,],  b3[i,],  b4[i,],  b5[i,],  b6[i,],  evi2[i,],
-                                                  snowPix[i,],dates, yrs, splineStart, numDaysFit, pheno_pars)}
-    } else { 
-      for (i in 1:numPix) {pheno_mat[i,] <- DoPhenologyHLS(b1[i,],  b2[i,],  b3[i,],  b4[i,],  b5[i,],  b6[i,],  evi2[i,],
-                                        snowPix[i,],dates, yrs, splineStart, numDaysFit, pheno_pars)}
-    }
-    
+    pheno_mat <- matrix(NA,numPix,pheno_pars$numLyrs*length(phenYrs))
+    for (i in 1:numPix) {pheno_mat[i,] <- DoPhenologyHLS(b2[i,],  b3[i,],  b4[i,],  b5[i,],  b6[i,], b7[i,],  vi[i,],
+                                                         snowPix[i,],dates, imgYrs, phenYrs, splineStart, splineEnd, numDaysFit, pheno_pars)}
+
     pheno_mat <- round(pheno_mat)
     
     #Write results to disk (.Rds files)
-    for (y in 1:length(yrs)) {
-      yr <- yrs[y]
+    for (y in 1:length(phenYrs)) {
+      yr <- phenYrs[y]
       ind <- ((y-1)*pheno_pars$numLyrs+1):(y*pheno_pars$numLyrs)
       subTab <- pheno_mat[,ind]
       for (i in 1:pheno_pars$numLyrs) {saveRDS(as.integer(subTab[,i]),paste0(outFold,'y',yr,'/lyr',i,'/c',chunk,'.Rds'))}}
@@ -644,7 +608,7 @@ runPhenoChunk <- function(chunk, tempFold, startYear, endYear, errorLog, pheno_p
 #Developed by Eli Melaas
 #Rewritten by Douglas Bolton to only run rotational model (Tan et al. 2010) and to have a stratified sample of pixels based on IL
 #---------------------------------------------------------------------
-topocorr_rotational_by_group <-function(x, groups, slope, aspect, sunzenith, sunazimuth, pheno_pars, plotBaseName, IL.epsilon=0.000001) {
+topocorr_rotational_by_group <-function(x, groups, slope, aspect, sunzenith, sunazimuth, topo_pars, plotBaseName, IL.epsilon=0.000001) {
   # topographic correction for image x based on topography and sun location
   
   #IMPORTANT: slope, aspect, sunzenith, sunazimuth must be in radians! 
@@ -662,7 +626,7 @@ topocorr_rotational_by_group <-function(x, groups, slope, aspect, sunzenith, sun
   groups[is.na(groups)] = 0
   
   #samples per class
-  numPer <- round(pheno_pars$numSamples/pheno_pars$numILclass)
+  numPer <- round(topo_pars$numSamples/topo_pars$numILclass)
   
   #Loop through bands
   for (b in 1:numBands) {
@@ -684,13 +648,13 @@ topocorr_rotational_by_group <-function(x, groups, slope, aspect, sunzenith, sun
       ilSub <- IL[clCheck]
       
       ##Break IL into groups. Sample within each group
-      breaks <- seq(quantile(ilSub,prob=0.02),quantile(ilSub,prob=0.98),length.out=(pheno_pars$numILclass+1))    #Using 2 and 98% percentiles to reduce influece of outliers
+      breaks <- seq(quantile(ilSub,prob=0.02),quantile(ilSub,prob=0.98),length.out=(topo_pars$numILclass+1))    #Using 2 and 98% percentiles to reduce influece of outliers
       breaks[1] <- min(ilSub); breaks[length(breaks)] <- max(ilSub)
-      ilGroup <- try({as.numeric(cut(ilSub,breaks=breaks,labels=1:pheno_pars$numILclass,include.lowest=T))},silent=T)  #Group pixels
+      ilGroup <- try({as.numeric(cut(ilSub,breaks=breaks,labels=1:topo_pars$numILclass,include.lowest=T))},silent=T)  #Group pixels
       if (inherits(ilGroup, 'try-error')) {next}    #If pixels can't be grouped, move on
       pixID <- 1:length(ilGroup)
       pixToSample <- matrix(0,length(pixID))
-      for (i in 1:pheno_pars$numILclass) {
+      for (i in 1:topo_pars$numILclass) {
         check <- ilGroup == i
         num <- sum(check)
         if (num == 0) {next}
@@ -844,14 +808,14 @@ averageDuplicates <-function(bands, snowPix, sensor, dates) {
 #Vectorized to avoid looping through dates
 #Douglas Bolton
 #---------------------------------------------------------------------
-CheckSpike_MultiBand <- function(blue,red,evi2, dates, pheno_pars){
+CheckSpike_MultiBand <- function(blue,red,vi, dates, pheno_pars){
   
   blue_og <- blue # preserve original vector
   red_og <- red # preserve original vector
-  evi2_og <- evi2 # preserve original vector
+  vi_og <- vi # preserve original vector
   dates_og <- as.numeric(dates)
   
-  good <- !is.na(blue_og) & !is.na(red_og) & !is.na(evi2_og)
+  good <- !is.na(blue_og) & !is.na(red_og) & !is.na(vi_og)
   
   x_outs <- matrix(F, length(blue_og)) # create the outlier output vector
   count <- 0 
@@ -860,7 +824,7 @@ CheckSpike_MultiBand <- function(blue,red,evi2, dates, pheno_pars){
     
     bS <- blue_og[good] # subset to non missing values
     rS <- red_og[good]
-    eS <- evi2_og[good] 
+    eS <- vi_og[good] 
     dS <- dates_og[good] #subset date vector 
     
     ind1 <- 1:(length(dS)-2)  #Get indices for first, second, and third images
@@ -889,7 +853,7 @@ CheckSpike_MultiBand <- function(blue,red,evi2, dates, pheno_pars){
     devRatio <- dev / (eS[ind3] - eS[ind1])
     dDiff <- dS[ind3] - dS[ind1]
     
-    #look for negative spikes in evi2
+    #look for negative spikes in vi
     eTest <- (dev > pheno_pars$minResid) & (abs(devRatio) > pheno_pars$spikeThresh) & (dDiff < pheno_pars$maxDistance)   
     
     check <- majaTest | eTest
@@ -906,23 +870,21 @@ CheckSpike_MultiBand <- function(blue,red,evi2, dates, pheno_pars){
 
 
 
-
-
 #---------------------------------------------------------------------
 #Check the snow flags to see if the dormant value would be a good fit
 #Specifically, if filling with the dormant value creates a negative spike in the time-series, we will remove the snow flag
 #Outputs an updated vector of snow flags
 #Douglas Bolton
 #---------------------------------------------------------------------
-Screen_SnowFills <- function(x, dormVal, snowPix, dates){
+Screen_SnowFills <- function(x, dormVal, snowPix, dates, pheno_pars){
   #Reduce vectors to valid obervations and snow pixels
   sORg<- !is.na(x) | snowPix==1
   snowSub <- snowPix[sORg]
   xSub <- x[sORg]
   d <- as.numeric(dates[sORg])
   
-  padded <- c(0,rollsum(snowSub,3),0)   #Get rolling sum of snow detections
-  padded2 <- c(3,rollmax(padded,3),3)   #Get rolling max of the sums. Setting first and last to 3 keeps these values if they are snow
+  padded <- c(0,roll_sum(snowSub,3),0)   #Get rolling sum of snow detections
+  padded2 <- c(3,roll_max(padded,3),3)   #Get rolling max of the sums. Setting first and last to 3 keeps these values if they are snow
   
   #If the rolling max is less than 3, means center value isn't part of three consecutive snow values
   #So we will only check values less than 3 to determine if they are spikes
@@ -967,7 +929,7 @@ Screen_SnowFills <- function(x, dormVal, snowPix, dates){
 # Fit a cubic spline to the HLS time-series
 # Written by Josh Gray and Douglas Bolton
 #----------------------------------------------------------
-Just_Smooth <- function(x, dates, pred_dates, weights, dormant_value, pheno_pars){
+Smooth_VI <- function(x, dates, pred_dates, weights, pheno_pars, dormant_value) {
     #Get index of pixels with good values
     ind <- !is.na(x)  
     # smooth with a spline to get continuous daily series
@@ -980,6 +942,22 @@ Just_Smooth <- function(x, dates, pred_dates, weights, dormant_value, pheno_pars
 }
 
 
+Smooth_Bands <- function(x, dates, pred_dates, weights, pheno_pars){
+  #Get index of pixels with good values
+  ind <- !is.na(x)  
+  # smooth with a spline to get continuous daily series
+  spl <- smooth.spline(dates[ind], x[ind], spar=pheno_pars$splineSpar, w=weights[ind])
+  # weighted version
+  xSmooth <- predict(spl, as.numeric(pred_dates))$y
+  
+  # determine upper and lower bound of good data (set in json file)
+  lowBound <- quantile(x, probs=pheno_pars$bandLimits[1],na.rm=T) 
+  upperBound <- quantile(x, probs=pheno_pars$bandLimits[2],na.rm=T) 
+  
+  xSmooth[xSmooth < lowBound] <- lowBound
+  xSmooth[xSmooth > upperBound] <- upperBound
+  return(xSmooth)
+}
 
 
 
@@ -1108,27 +1086,24 @@ GetSegs <- function(peaks, x, pars, peak=NA){
 }
 
 
-
 #----------------------------------------------------------
-#Get phenology dates from segments
-#Josh Gray
+#Get phenology dates from segments. Also pull the peak date
+#Josh Gray. Updated by Douglas Bolton to include peak date and cleaned
 #----------------------------------------------------------
 GetPhenoDates <- function(segs, x, dates, pheno_pars){
   pheno_dates <- list()
+  
+  #Pull greenup dates
   for(gup_thresh in pheno_pars$gup_threshes){
-    tmp_dates <- list(dates[unlist(lapply(segs, GetSegThresh, x, gup_thresh, gup=T), use.names=F)])
-    if(all(is.na(unlist(tmp_dates, use.names=F)))){
-      tmp_dates <- NA
-    }
-    pheno_dates <- c(pheno_dates, tmp_dates)
+    pheno_dates <- c(pheno_dates, list(dates[unlist(lapply(segs, GetSegThresh, x, gup_thresh, gup=T), use.names=F)]))
   }
   
+  #Pull peak dates
+  pheno_dates <- c(pheno_dates, list(dates[sapply(segs, "[[", 2)]))
+  
+  #Pull greendown dates
   for(gdown_thresh in pheno_pars$gdown_threshes){
-    tmp_dates <- list(dates[unlist(lapply(segs, GetSegThresh, x, gdown_thresh, gup=F), use.names=F)])
-    if(all(is.na(unlist(tmp_dates, use.names=F)))){
-      tmp_dates <- NA
-    }
-    pheno_dates <- c(pheno_dates, tmp_dates)
+    pheno_dates <- c(pheno_dates, list(dates[unlist(lapply(segs, GetSegThresh, x, gdown_thresh, gup=F), use.names=F)]))
   }
   return(pheno_dates)
 }
@@ -1199,7 +1174,7 @@ GetSegMetrics <- function(seg, x_smooth, x_raw, smooth_dates, raw_dates){
   # get the full segment minimum/maximum SVI
   seg_min <- min(tmp_seg_smooth, na.rm=T)
   seg_max <- max(tmp_seg_smooth, na.rm=T)
-  
+  seg_amp <- seg_max - seg_min
   
   # get the segment integrated SVI: the sum of values.
   #For MODIS C6, this is the sum of values above the minimum evi. 
@@ -1246,7 +1221,7 @@ GetSegMetrics <- function(seg, x_smooth, x_raw, smooth_dates, raw_dates){
   gdown_maxgap <- max(diff(c(smooth_dates[seg[2]],raw_dates_gdown[!is.na(gdown_raw_data)],smooth_dates[seg[3]])))
   gdown_maxgap_frac <- gdown_maxgap / (seg[3] - seg[2]) 
   
-  return(c(seg_min, seg_max, seg_int, 
+  return(c(seg_amp, seg_max, seg_int, 
            gup_seg_rsquared, gup_numObs, gup_maxgap_frac, 
            gdown_seg_rsquared, gdown_numObs, gdown_maxgap_frac))
 }
@@ -1287,22 +1262,34 @@ GetSegMetricsLight <- function(seg, smooth_dates, raw_dates){
 
 #----------------------------------------------------------
 #When a cycle is not detected, return a subset of metrics for the calendar year
-#For now, returning evi minimum and evi maximum
+#For now, returning evi amplitude and evi maximum
 #Douglas Bolton
 #----------------------------------------------------------
-annualMetrics <- function(smooth_evi2,pred_dates,yr,pheno_pars) {
+annualMetrics <- function(smoothed_vi, pred_dates, filled_vi, baseWeight, yr, pheno_pars) {
   
   out <- matrix(NA,pheno_pars$numLyrs)
   try({
-  ind <- as.numeric(format(pred_dates,'%Y')) == yr
-  evi2_inyear  <- smooth_evi2[ind]
-  out[1] <- 0    #Zero = No cycles detected
-  out[44] <- min(evi2_inyear,na.rm=T)  * 10000    
-  out[45] <- max(evi2_inyear,na.rm=T)  * 10000
-  },silent=T)
-  
-  return(out)}
+    inyear <- as.numeric(format(pred_dates,'%Y')) == yr
+    vi_inyear  <- smoothed_vi[inyear]
+    seg_min <- min(vi_inyear,na.rm=T) 
+    seg_max <- max(vi_inyear,na.rm=T) 
 
+    out[pheno_pars$loc_numCycles] <- 0                        #Zero cycles detected
+    out[pheno_pars$loc_max] <- seg_max  * 10000               #Cycle maximum
+    out[pheno_pars$loc_amp] <- (seg_max - seg_min) * 10000    #Cycle amplitude
+  
+
+    #And get calendar year metrics with snow counted as good
+    ind <- !is.na(filled_vi) & inyear
+    out[pheno_pars$loc_numObs_count_snow]<- sum(ind)
+    out[pheno_pars$loc_maxGap_count_snow] <- as.numeric(max(diff(c( min(pred_dates[inyear]), pred_dates[ind], max(pred_dates[inyear])))))
+  
+    #Now get the full segment metrics, not counting snow and not counting gap filled
+    ind <- ind & baseWeight == 1   #If weight is less than 1, implies it is a snow-fill, and we don't want to count snow-filled as a valid observation. 
+    out[pheno_pars$loc_numObs] <- sum(ind)
+    out[pheno_pars$loc_maxGap] <- as.numeric(max(diff(c( min(pred_dates[inyear]), pred_dates[ind], max(pred_dates[inyear])))))
+    },silent=T)
+  return(out)}
 
 
 
@@ -1311,18 +1298,54 @@ annualMetrics <- function(smooth_evi2,pred_dates,yr,pheno_pars) {
 #Does all bands at the same time
 #Douglas Bolton
 #----------------------------------------------------------
-MakeComposites <- function(compositeDates,pred_dates,smooth_b1, smooth_b2, smooth_b3, smooth_b4, smooth_b5, smooth_b6) {
+MakeComposites <- function(compositeDates,pred_dates,smooth_b2, smooth_b3, smooth_b4, smooth_b5, smooth_b6, smooth_b7) {
 
-  days <- which(pred_dates %in% compositeDates)
+  days <- match(compositeDates,pred_dates)
   
   #Ensure that all days were found. If not, don't return any, as this means something is incorrect
   if (length(days) != length(compositeDates)) {return(NA)}
   
-  out <- rbind(smooth_b1[days],smooth_b2[days],smooth_b3[days],
-               smooth_b4[days],smooth_b5[days],smooth_b6[days])
+  out <- rbind(smooth_b2[days],smooth_b3[days],smooth_b4[days],
+               smooth_b5[days],smooth_b6[days],smooth_b7[days])
   
   return(out)
   
+}
+
+
+
+
+
+calculateWeights <- function(smoothMat_Masked, numDaysFit, numYrs, pheno_pars) {
+  outWeights <- array(0, dim = c(numDaysFit, numYrs, numYrs))
+  for (y in 1:numYrs) {
+    #Only compare on dates that have splined data in target year
+    ind <- !is.na(smoothMat_Masked[,y])
+    sub_vi <- smoothMat_Masked[ind,]
+    numGoodDays <- colSums(!is.na(sub_vi))  #how many days actually have splined data?
+    
+    #What approach to use for weighting
+    ######
+    #Calculate euclidean distance
+    eucl <- colSums((sub_vi - sub_vi[,y])^2,na.rm=T)^0.5 
+    
+    #Now calculate euclidean distance assuming the average through the year
+    #Scale euculidean distances between this value and a perfect fit (0 to 1)
+    theAvg <- matrix(mean(sub_vi[,y],na.rm=T),length(sub_vi[,y]),numYrs,byrow=T)
+    theAvg[is.na(sub_vi)] <- NA   #only calculate for days that have data
+    
+    max_eucl <- colSums((theAvg - sub_vi[,y])^2,na.rm=T)^0.5    #calculate eucidean distance for this case
+    scaled_eucl <- 1 - (eucl / max_eucl)
+    scaled_eucl[scaled_eucl < 0] <- 0
+    
+    #Weigh as the scaled euclidean distance (0 = same/worse than assuming average, 1 = perfect fit)
+    weight <- pheno_pars$maxWeight * scaled_eucl
+    weight[numGoodDays < pheno_pars$minDaysForSplineComparison]  <- 0
+    weight[is.na(weight)] <- 0
+    weight[is.infinite(weight)] <- 0
+    outWeights[,,y] <- matrix(weight,numDaysFit,numYrs,byrow=T)
+  }
+  return(outWeights)
 }
 
 
@@ -1340,81 +1363,126 @@ MakeComposites <- function(compositeDates,pred_dates,smooth_b1, smooth_b2, smoot
 #Code adapted by Douglas Bolton
 #Based on MODIS C6 algorithm developed by Josh Gray
 #---------------------------------------------------------------------
-DoPhenologyHLS_Climatology <- function(b1, b2, b3, b4, b5, b6, evi2, snowPix, dates, yrs, splineStart, numDaysFit, pheno_pars){
-  
-  
-  numYrs <- length(yrs)
-  daysVec <- 1:numDaysFit
-  vecLength <- numDaysFit*numYrs
+DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, phenYrs, splineStart, splineEnd, numDaysFit, pheno_pars){
   
   
   #Despike, calculate dormant value, fill snow with dormant value, despike poorly fit snow values
   log <- try({
     #Despike
-    spikes <- CheckSpike_MultiBand(b1/10000,b3/10000,evi2, dates, pheno_pars)
+    spikes <- CheckSpike_MultiBand(b2/10000,b4/10000,vi, dates, pheno_pars)
     
     #Set despiked values to NA
-    evi2[spikes] <- NA
-    b1[spikes] <- NA; b2[spikes] <- NA; b3[spikes] <- NA
-    b4[spikes] <- NA; b5[spikes] <- NA; b6[spikes] <- NA
+    vi[spikes] <- NA
+    b2[spikes] <- NA; b3[spikes] <- NA; b4[spikes] <- NA
+    b5[spikes] <- NA; b6[spikes] <- NA; b7[spikes] <- NA
     
     dormIms <- dates >= pheno_pars$dormStart & dates <= pheno_pars$dormEnd
     
-    evi2_dorm <- quantile(evi2[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T)   #Calc evi2 dormant value
-    snowPix <- Screen_SnowFills(evi2,evi2_dorm,snowPix,dates)              #Screen poorly filled snow values
-    evi2[snowPix] <- evi2_dorm                                             #Fill remaining snow values with dormant value  
+    vi_dorm <- quantile(vi[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T)   #Calc vi dormant value
+    snowPix <- Screen_SnowFills(vi,vi_dorm,snowPix,dates,pheno_pars)              #Screen poorly filled snow values
     
-    #now calculate dormancy values and fill each band
-    b1_dorm <- quantile(b1[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T); b1[snowPix] <- b1_dorm
-    b2_dorm <- quantile(b2[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T); b2[snowPix] <- b2_dorm
-    b3_dorm <- quantile(b3[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T); b3[snowPix] <- b3_dorm
-    b4_dorm <- quantile(b4[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T); b4[snowPix] <- b4_dorm
-    b5_dorm <- quantile(b5[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T); b5[snowPix] <- b5_dorm
-    b6_dorm <- quantile(b6[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T); b6[snowPix] <- b6_dorm
     
-    #First, we will fit splines to each year invidually
-    #To line up observations from each year, we will create a matrix for evi2 and each band (numDaysFit x numYears)
+    #now calculate dormancy values and fill individual bands
+    dormObs <- dormIms & vi < vi_dorm    #Defining dormant observations for bands as median on dates when vi < vi_dorm
+    b2_dorm <- median(b2[dormObs], na.rm=T); b2[snowPix] <- b2_dorm
+    b3_dorm <- median(b3[dormObs], na.rm=T); b3[snowPix] <- b3_dorm
+    b4_dorm <- median(b4[dormObs], na.rm=T); b4[snowPix] <- b4_dorm
+    b5_dorm <- median(b5[dormObs], na.rm=T); b5[snowPix] <- b5_dorm
+    b6_dorm <- median(b6[dormObs], na.rm=T); b6[snowPix] <- b6_dorm
+    b7_dorm <- median(b7[dormObs], na.rm=T); b7[snowPix] <- b7_dorm
     
-    #Assign base Weights
-    baseW <- matrix(1,length(evi2))
-    baseW[snowPix == 1] <- pheno_pars$snowWeight
+    vi[snowPix] <- vi_dorm   #Fill remaining snow values with dormant value for vi  
     
-    #Option to not include observations from buffer period
-    #climInds <- matrix(TRUE,numDaysFit)
-    #climInds[pheno_pars$splineBuffer:(numDaysFit-pheno_pars$splineBuffer)] <- FALSE
     
-    splineEnd <- splineStart+(numDaysFit-1)
     
-    #Single spline through all years
-    fullDates <- seq(splineStart[1], splineEnd[numYrs], by="day")
-    smoothed <- Just_Smooth(evi2, dates, fullDates, baseW, evi2_dorm, pheno_pars)
-    
-    gDates <- dates[!is.na(evi2)]
-    
-    #Mask spline where gap greater than 45 days
-    dDiff <- diff(gDates) > pheno_pars$maxGapForSplineComparison
+    #Determine gaps that require filling
+    gDates <- dates[!is.na(vi)]  
+    dDiff <- diff(gDates) > pheno_pars$gapLengthToFill     #Gaps greater than 30 days will be filled
     dStart <- gDates[c(dDiff,FALSE)]
     dEnd <- gDates[c(FALSE,dDiff)]
-    for (d in 1:length(dStart)) {smoothed[fullDates >= dStart[d] & fullDates < dEnd[d]] <- NA}
     
-    #Mask spline before first image and after last image
-    smoothed[fullDates < gDates[1]] <- NA
-    smoothed[fullDates > gDates[length(gDates)]] <- NA
+    
+    #Locate gaps in date vector
+    all_dates <- seq(min(splineStart), max(splineEnd), by="day")
+    
+    fill_locations <- matrix(FALSE,length(all_dates))
+    for (d in 1:length(dStart)) {
+      fill_locations[all_dates >= dStart[d] & all_dates < dEnd[d]] <- TRUE}
+    
+    fill_dates <- all_dates[fill_locations]
+    
+    yToDo <- 1:length(imgYrs)
+    yToDo <- yToDo[imgYrs %in% phenYrs]
+    yrsWithGaps <- c()
+    for (y in yToDo) {
+      pred_dates <- seq(splineStart[y], splineEnd[y], by="day")
+      if (sum(pred_dates %in% fill_dates) > 0) {yrsWithGaps <- c(yrsWithGaps,imgYrs[y])}
+    }
+    
+    
+    #If there are gaps to be filled, then we will spline all years. 
+    #If not, just spline product years
+    if (length(yrsWithGaps) > 0) {
+      yrs <- imgYrs
+    } else {
+      yrs <- phenYrs
+      splineStart <- splineStart[imgYrs %in% phenYrs]
+      splineEnd <- splineEnd[imgYrs %in% phenYrs]}
+    
+    numYrs <- length(yrs)
+    daysVec <- 1:numDaysFit
+    vecLength <- numDaysFit*numYrs
+    
+    
+    
+    
+    
+    #First, we will fit splines to each year invidually
+    #To line up observations from each year, we will create a matrix for vi and each band (numDaysFit x numYears)
     
     smoothMat <- matrix(NA, numDaysFit, numYrs)
+    maskMat <- matrix(0, numDaysFit, numYrs)
     fillMat <- smoothMat
-    b1Mat <- smoothMat; b2Mat <- smoothMat; b3Mat <- smoothMat
-    b4Mat <- smoothMat; b5Mat <- smoothMat; b6Mat <- smoothMat
-    baseWeights <- smoothMat
+    b2Mat <- smoothMat; b3Mat <- smoothMat; b4Mat <- smoothMat
+    b5Mat <- smoothMat; b6Mat <- smoothMat; b7Mat <- smoothMat
+    baseWeights <- maskMat
+    
     for (y in 1:numYrs) {
-      dateRange <- dates >= splineStart[y] & dates <= splineEnd[y] & !is.na(evi2)   
-      fillDs <- as.numeric(dates[dateRange] - splineStart[y]) + 1
-      
-      smoothMat[,y] <- smoothed[fullDates >= splineStart[y] & fullDates <= splineEnd[y]]
-      baseWeights[fillDs,y] <- baseW[dateRange]
-      fillMat[fillDs,y] <- evi2[dateRange]
-      b1Mat[fillDs,y] <- b1[dateRange]; b2Mat[fillDs,y] <- b2[dateRange]; b3Mat[fillDs,y] <- b3[dateRange]
-      b4Mat[fillDs,y] <- b4[dateRange]; b5Mat[fillDs,y] <- b5[dateRange]; b6Mat[fillDs,y] <- b6[dateRange] }
+      #Use try statement, because we don't want to stop processing if only an error in one year
+      try({
+        
+        dateRange <- dates >= splineStart[y] & dates <= splineEnd[y] & !is.na(vi)   
+        
+        dateSub <- dates[dateRange]; viSub <- vi[dateRange]; snowSub <- snowPix[dateRange]
+        
+        #Get weights
+        weights <- matrix(1,length(snowSub))
+        weights[snowSub == 1] <- pheno_pars$snowWeight
+        
+        pred_dates <- seq(splineStart[y], splineEnd[y], by="day")
+        
+        #Assign weights and run cubic spline
+        smoothed <- Smooth_VI(viSub, dateSub, pred_dates, weights, pheno_pars, vi_dorm)
+        
+        
+        #Mask spline in gaps, and before/after first/last image
+        maskMat[fill_locations[all_dates %in% pred_dates]] <- 1    #Mask spline in gaps
+        maskMat[pred_dates < dateSub[1]] <- 1                      #Mask spline before first image and after last image
+        maskMat[pred_dates > dateSub[length(dateSub)]] <- 1
+        
+        #Mask spline in the buffer years (only interested in comparing splines in target year)
+        maskMat[format(pred_dates,'%Y') != yrs[y]]  <- 1
+        
+        fillDs <- pred_dates %in% dateSub
+        
+        smoothMat[,y] <- smoothed
+        baseWeights[fillDs,y] <- weights
+        fillMat[fillDs,y] <- viSub
+        b2Mat[fillDs,y] <- b2[dateRange]; b3Mat[fillDs,y] <- b3[dateRange]; b4Mat[fillDs,y] <- b4[dateRange]
+        b5Mat[fillDs,y] <- b5[dateRange]; b6Mat[fillDs,y] <- b6[dateRange]; b7Mat[fillDs,y] <- b7[dateRange]
+        
+      },silent=TRUE)
+    }
     
     
     xs <- rep(daysVec,numYrs)
@@ -1422,86 +1490,123 @@ DoPhenologyHLS_Climatology <- function(b1, b2, b3, b4, b5, b6, evi2, snowPix, da
     ysGood <- !is.na(ys)
     baseW <- matrix(baseWeights,vecLength)   #Base Weights are 1=clear observation, 0.5=snow-filled
     
-    b1Mat <- matrix(b1Mat,vecLength); b2Mat <- matrix(b2Mat,vecLength) 
-    b3Mat <- matrix(b3Mat,vecLength); b4Mat <- matrix(b4Mat,vecLength) 
-    b5Mat <- matrix(b5Mat,vecLength); b6Mat <- matrix(b6Mat,vecLength) 
+    b2Mat <- matrix(b2Mat,vecLength);b3Mat <- matrix(b3Mat,vecLength)
+    b4Mat <- matrix(b4Mat,vecLength);b5Mat <- matrix(b5Mat,vecLength) 
+    b6Mat <- matrix(b6Mat,vecLength);b7Mat <- matrix(b7Mat,vecLength)  
     
+    smoothMat_Masked <- smoothMat
+    smoothMat_Masked[maskMat] <- NA
     
-  },silent=TRUE)
-  #If there is an error despiking, return NAs
-  if(inherits(log, "try-error")){return(matrix(NA,pheno_pars$numLyrs*numYrs))}   
   
-  #Loop through years, compare spline to other years, weight each year based on similiarity, fit spline, calculate phenology
+    #Loop through years, compare spline to other years, weight each year based on similiarity, fit spline, calculate phenology
+    #Just product years now
+    yToDo <- 1:numYrs
+    yToDo <- yToDo[yrs %in% phenYrs]
+    
+    
+    weightArray <- calculateWeights(smoothMat_Masked, numDaysFit, numYrs, pheno_pars) 
+    
+    prevYear <- daysVec <= pheno_pars$splineBuffer
+    inYear <- daysVec > pheno_pars$splineBuffer & daysVec <= (pheno_pars$splineBuffer+365)
+    nextYear <- daysVec > (pheno_pars$splineBuffer+365)
+    
+    },silent=TRUE)
+    #If there is an error despiking or other initial steps, return NAs
+    if(inherits(log, "try-error")){return(matrix(NA,pheno_pars$numLyrs*length(phenYrs)))}   
+  
   outAll=c()
-  for (y in 1:numYrs) {
+  for (y in yToDo) {
     log <- try({
       
-      pred_dates <- seq(splineStart[y], splineEnd[y], by="day")  
-      #Only compare on dates that have splined data in target year
-      ind <- !is.na(smoothMat[,y])
-      sub_evi2 <- smoothMat[ind,]
-      numGoodDays <- colSums(!is.na(sub_evi2))  #how many days actually have splined data?
+      pred_dates <- seq(splineStart[y], splineEnd[y], by="day")
       
-      #What approach to use for weighting
-      ######
-      #Calculate euclidean distance
-      eucl <- colSums((sub_evi2 - sub_evi2[,y])^2,na.rm=T)^0.5 
       
-      #Now calculate euclidean distance assuming the average through the year
-      #Scale euculidean distances between this value and a perfect fit (0 to 1)
-      theAvg <- matrix(mean(sub_evi2[,y],na.rm=T),length(sub_evi2[,y]),numYrs,byrow=T)
-      theAvg[is.na(sub_evi2)] <- NA   #only calculate for days that have data
+      if (yrs[y] %in% yrsWithGaps) {
+        
+        indPrev <- y-1; indPrev[indPrev<1] <- 1
+        indNext <- y+1; indNext[indNext>numYrs] <- numYrs
+        
+        weights <- rbind(weightArray[prevYear,,indPrev],
+                         weightArray[inYear,,y],
+                         weightArray[nextYear,,indNext])
+        
+        #Where are the gaps?
+        toFill <- fill_locations[all_dates %in% pred_dates]
+        
+        weights[!toFill,] <- 0     #Set weight to zero for observations that aren't in a gap
+        weights[,y] <- 1           #Set weights in target year to 1
+        
+        
+        #Now that we have weights, calculate phenology
+        #######################
+        weights <- matrix(weights,vecLength) * baseW   #Multiple weights by base weight (1=good,0.5=snow-filled)
+        theInds <- ysGood & weights > 0
+        xs_sub <- xs[theInds]; w_sub <- weights[theInds]
+        smoothed_vi <- Smooth_VI(ys[theInds], xs_sub, daysVec, w_sub, pheno_pars, vi_dorm)  #Fit spline
+        
+      } else {
+        
+        #Variables needed for next steps if the above gap filling was not done
+        theInds <- matrix(FALSE,length(ysGood))
+        theInds[((y-1)*numDaysFit+1):(y*numDaysFit)] <- TRUE
+        xs_sub <- xs[theInds]; w_sub <- baseW[theInds]
+        
+        smoothed_vi <- smoothMat[,y]   #if no gaps to fill, just use existing spline
+      }
       
-      max_eucl <- colSums((theAvg - sub_evi2[,y])^2,na.rm=T)^0.5    #calculate eucidean distance for this case
-      scaled_eucl <- 1 - (eucl / max_eucl)
-      scaled_eucl[scaled_eucl < 0] <- 0
-      
-      #Weigh as the scaled euclidean distance (0 = same/worse than assuming average, 1 = perfect fit)
-      weight <-pheno_pars$maxWeight * scaled_eucl
-      weight[numGoodDays < pheno_pars$minDaysForSplineComparison]  <- 0
-      weight[is.na(weight)] <- 0
-      weight[is.infinite(weight)] <- 0
-      weight[y] <- 1  #Set weight of target year to 1
-      weights <- matrix(weight,numDaysFit,numYrs,byrow=T)
-      
-      #weights[climInds,yrs!=yrs[y]] <- 0  #Option to only include WITHIN year observations for climatology (and not the buffer period)
-      
-      #Now that we have weights, calculate phenology
-      #######################
-      weights <- matrix(weights,vecLength) * baseW   #Multiple weights by base weight (1=good,0.5=snow-filled)
-      theInds <- ysGood & weights > 0
-      xs_sub <- xs[theInds]; w_sub <- weights[theInds]
-      smooth_evi2 <- Just_Smooth(ys[theInds], xs_sub, daysVec, w_sub, evi2_dorm, pheno_pars)  #Fit spline
       
       #Fit phenology
-      peaks <- FindPeaks(smooth_evi2)
-      if (all(is.na(peaks))) {outAll <- c(outAll,annualMetrics(smooth_evi2,pred_dates,yrs[y],pheno_pars));next}   #If no peaks, calc annual metrics, and move to next year
+      peaks <- FindPeaks(smoothed_vi)
+      if (all(is.na(peaks))) {outAll <- c(outAll,annualMetrics(smoothed_vi,pred_dates,fillMat[,y], baseWeights[,y], yrs[y],pheno_pars));next}   #If no peaks, calc annual metrics, and move to next year
       
       #Find full segments
-      full_segs <- GetSegs(peaks, smooth_evi2, pheno_pars)
-      if (is.null(full_segs)) {outAll <- c(outAll,annualMetrics(smooth_evi2,pred_dates,yrs[y],pheno_pars));next}  #If no valid segments, calc annual metrics, and move to next year
+      full_segs <- GetSegs(peaks, smoothed_vi, pheno_pars)
+      if (is.null(full_segs)) {outAll <- c(outAll,annualMetrics(smoothed_vi,pred_dates,fillMat[,y], baseWeights[,y], yrs[y],pheno_pars));next}  #If no valid segments, calc annual metrics, and move to next year
       
       #Only keep segments with peaks within year *****
-      kept_peaks <- unlist(full_segs, use.names=F)  
-      kept_peaks  <- kept_peaks[seq(2, length(kept_peaks), by=3)]    #extract peaks. If there are no peaks, an error will thrown, and will move to next year
-      full_segs <- full_segs[as.numeric(format(pred_dates[kept_peaks],'%Y')) == yrs[y]]  #check if peaks are in the year
+      full_segs <- full_segs[inYear[sapply(full_segs, "[[", 2)] ]  #check if peaks are in the year
       
       #Get PhenoDates
-      pheno_dates <- GetPhenoDates(full_segs, smooth_evi2, pred_dates, pheno_pars)
+      pheno_dates <- GetPhenoDates(full_segs, smoothed_vi, pred_dates, pheno_pars)
       phen <- unlist(pheno_dates, use.names=F)
-      if (all(is.na(phen))) {outAll <- c(outAll,annualMetrics(smooth_evi2,pred_dates,yrs[y],pheno_pars));next} #If no dates detected, calc annual metrics, and move to next year
+      if (all(is.na(phen))) {outAll <- c(outAll,annualMetrics(smoothed_vi,pred_dates,fillMat[,y], baseWeights[,y], yrs[y],pheno_pars));next} #If no dates detected, calc annual metrics, and move to next year
       
-      #Get the segment metrics
-      filled_evi2 <- fillMat[,y]
-      filled_evi2[baseWeights[,y] < 1] <- NA    #If weight is less than 1, implies it is a snow-fill, and we don't want to count snow-filled as a valid observation. So set to NA.
-      seg_metrics <- lapply(full_segs, GetSegMetrics, smooth_evi2, filled_evi2[!is.na(filled_evi2)], pred_dates, pred_dates[!is.na(filled_evi2)])
       
-      seg_metricsFill <- lapply(full_segs, GetSegMetricsLight, daysVec, sort(xs[ysGood & weights > 0 & baseW == 1]))
+      #Get metrics that describe the segments and the year
+      
+      
+      #First, get metrics counting gap filled observations as "good" observations
+      seg_metricsFill <- lapply(full_segs, GetSegMetricsLight, daysVec, sort(xs_sub))
+      un <- unlist(seg_metricsFill, use.names=F)
+      ln <- length(un)      
+      gup_maxgap_frac_filled <- un[seq(1, ln, by=2)] * 100
+      gdown_maxgap_frac_filled <- un[seq(2, ln, by=2)] * 100
+      
+      
+      #Second, get segment metrics with snow observations counted as "good" observations
+      filled_vi <- fillMat[,y]
+      seg_metricsFill <- lapply(full_segs, GetSegMetricsLight, daysVec, daysVec[!is.na(filled_vi)])
+      un <- unlist(seg_metricsFill, use.names=F)
+      ln <- length(un)      
+      gup_maxgap_frac_count_snow <- un[seq(1, ln, by=2)] * 100
+      gdown_maxgap_frac_count_snow <- un[seq(2, ln, by=2)] * 100
+      
+      #And get calendar year metrics with snow counted as good
+      numObs_count_snow <- sum(!is.na(filled_vi) & inYear)
+      maxGap_annual_count_snow <- max(diff(c( pheno_pars$splineBuffer+1, daysVec[!is.na(filled_vi) & inYear], 365+pheno_pars$splineBuffer))) 
+      
+      
+      #Now get the full segment metrics, not counting snow and not counting gap filled
+      filled_vi[baseWeights[,y] < 1] <- NA    #If weight is less than 1, implies it is a snow-fill, and we don't want to count snow-filled as a valid observation. So set to NA.
+      numObs <- sum(!is.na(filled_vi) & inYear)   #Number of observations in year
+      maxGap_annual <- max(diff(c( pheno_pars$splineBuffer+1, daysVec[!is.na(filled_vi) & inYear], 365+pheno_pars$splineBuffer)))  #Max gap (in days) during year
+      seg_metrics <- lapply(full_segs, GetSegMetrics, smoothed_vi, filled_vi[!is.na(filled_vi)], pred_dates, pred_dates[!is.na(filled_vi)]) #full segment metrics
+      
       
       #Unlist and scale the seg metrics
       un <- unlist(seg_metrics, use.names=F)
       ln <- length(un)
-      seg_min <- un[seq(1, ln, by=9)] * 10000
+      seg_amp <- un[seq(1, ln, by=9)] * 10000
       seg_max <- un[seq(2, ln, by=9)] * 10000
       seg_int <- un[seq(3, ln, by=9)] * 100
       gup_rsq <- un[seq(4, ln, by=9)] * 10000
@@ -1511,65 +1616,70 @@ DoPhenologyHLS_Climatology <- function(b1, b2, b3, b4, b5, b6, evi2, snowPix, da
       gdown_numObs <- un[seq(8, ln, by=9)]
       gdown_maxgap_frac <- un[seq(9, ln, by=9)] * 100
       
-      un <- unlist(seg_metricsFill, use.names=F)
-      ln <- length(un)      
-      gup_maxgap_frac_filled <- un[seq(1, ln, by=2)] * 100
-      gdown_maxgap_frac_filled <- un[seq(2, ln, by=2)] * 100
       
-      numRecords <- length(seg_min)  #how many cycles were recorded
+      numRecords <- length(seg_amp)  #how many cycles were recorded
       
-      naCheck <- is.na(seg_min)
+      naCheck <- is.na(seg_amp)
       numCyc <- sum(naCheck == 0)  #how many cycles have good data (seg metrics has valid observations)
       
       #If no cycles have good data, record NA output and move to next
-      if (numCyc == 0) {outAll <- c(outAll,annualMetrics(smooth_evi2,pred_dates,yrs[y],pheno_pars));next}
+      if (numCyc == 0) {outAll <- c(outAll,annualMetrics(smoothed_vi,pred_dates,fillMat[,y], baseWeights[,y], yrs[y],pheno_pars));next}
       
       
       # Fit spline to individual bands. Waiting until now so that we don't fit for pixels with no cycle
-      smooth_b1 <- Just_Smooth(b1Mat[theInds], xs_sub, daysVec, w_sub, b1_dorm, pheno_pars)
-      smooth_b2 <- Just_Smooth(b2Mat[theInds], xs_sub, daysVec, w_sub, b2_dorm, pheno_pars)
-      smooth_b3 <- Just_Smooth(b3Mat[theInds], xs_sub, daysVec, w_sub, b3_dorm, pheno_pars)
-      smooth_b4 <- Just_Smooth(b4Mat[theInds], xs_sub, daysVec, w_sub, b4_dorm, pheno_pars)
-      smooth_b5 <- Just_Smooth(b5Mat[theInds], xs_sub, daysVec, w_sub, b5_dorm, pheno_pars)
-      smooth_b6 <- Just_Smooth(b6Mat[theInds], xs_sub, daysVec, w_sub, b6_dorm, pheno_pars)
-
+      # Since this takes the most time, there is an option to skip this and just fill NAs
+      if (pheno_pars$doComposites) {
+        smooth_b2 <- Smooth_Bands(b2Mat[theInds], xs_sub, daysVec, w_sub, pheno_pars)
+        smooth_b3 <- Smooth_Bands(b3Mat[theInds], xs_sub, daysVec, w_sub, pheno_pars)
+        smooth_b4 <- Smooth_Bands(b4Mat[theInds], xs_sub, daysVec, w_sub, pheno_pars)
+        smooth_b5 <- Smooth_Bands(b5Mat[theInds], xs_sub, daysVec, w_sub, pheno_pars)
+        smooth_b6 <- Smooth_Bands(b6Mat[theInds], xs_sub, daysVec, w_sub, pheno_pars)
+        smooth_b7 <- Smooth_Bands(b7Mat[theInds], xs_sub, daysVec, w_sub, pheno_pars)
+      } else {
+        smooth_b2 <- matrix(NA,daysVec);smooth_b3 <- matrix(NA,daysVec);smooth_b4 <- matrix(NA,daysVec)
+        smooth_b5 <- matrix(NA,daysVec);smooth_b6 <- matrix(NA,daysVec);smooth_b7 <- matrix(NA,daysVec)}
+      
       
       if (numRecords == 1) {
-        comp <- as.vector(MakeComposites(phen,pred_dates,smooth_b1, smooth_b2, smooth_b3, smooth_b4, smooth_b5, smooth_b6))
+        comp <- as.vector(MakeComposites(phen,pred_dates,smooth_b2, smooth_b3, smooth_b4, smooth_b5, smooth_b6, smooth_b7))
         
         #If only one cycle was recorded, report it, and fill NA values for second cycle
-        out <- c(1, phen, comp, seg_min, seg_max, seg_int,
-                 gup_rsq, gup_numObs, gup_maxgap_frac, gup_maxgap_frac_filled, 
-                 gdown_rsq, gdown_numObs, gdown_maxgap_frac, gdown_maxgap_frac_filled, 
-                 matrix(NA,pheno_pars$halfLyrs))
+        out <- c(1, 
+                 phen, seg_max, seg_amp, seg_int, comp,
+                 gup_numObs,   gup_maxgap_frac,   gup_maxgap_frac_count_snow,   gup_maxgap_frac_filled,   gup_rsq,   
+                 gdown_numObs, gdown_maxgap_frac, gdown_maxgap_frac_count_snow, gdown_maxgap_frac_filled, gdown_rsq, 
+                 matrix(NA,pheno_pars$numLyrsCycle2),
+                 numObs, numObs_count_snow, maxGap_annual, maxGap_annual_count_snow)
+        
       } else {
         #If there are multiple cycles, sort by amplitude and report two highest amplitudes (highest amplitude first)
-        seg_amp <- seg_max - seg_min
         theOrd <- order(seg_amp,decreasing=T)   
         
         phen1 <- phen[seq(theOrd[1], length(phen), by = numRecords)]
         phen2 <- phen[seq(theOrd[2], length(phen), by = numRecords)]
         
-        comp1 <- as.vector(MakeComposites(phen1,pred_dates,smooth_b1, smooth_b2, smooth_b3, smooth_b4, smooth_b5, smooth_b6))
-        comp2 <- as.vector(MakeComposites(phen2,pred_dates,smooth_b1, smooth_b2, smooth_b3, smooth_b4, smooth_b5, smooth_b6))
+        comp1 <- as.vector(MakeComposites(phen1,pred_dates,smooth_b2, smooth_b3, smooth_b4, smooth_b5, smooth_b6, smooth_b7))
+        comp2 <- as.vector(MakeComposites(phen2,pred_dates,smooth_b2, smooth_b3, smooth_b4, smooth_b5, smooth_b6, smooth_b7))
         
         if (naCheck[theOrd[2]]) {
           #If the second cycle did not have enough observations (seg_metrics = NA), only report the first cycle
           out <- c(numCyc, 
-                   phen1, comp1, seg_min[theOrd[1]], seg_max[theOrd[1]], seg_int[theOrd[1]],
-                   gup_rsq[theOrd[1]], gup_numObs[theOrd[1]], gup_maxgap_frac[theOrd[1]], gup_maxgap_frac_filled[theOrd[1]], 
-                   gdown_rsq[theOrd[1]],gdown_numObs[theOrd[1]], gdown_maxgap_frac[theOrd[1]], gdown_maxgap_frac_filled[theOrd[1]],
-                   matrix(NA,pheno_pars$halfFill))
+                   phen1, seg_max[theOrd[1]], seg_amp[theOrd[1]], seg_int[theOrd[1]], comp1, 
+                   gup_numObs[theOrd[1]],   gup_maxgap_frac[theOrd[1]],   gup_maxgap_frac_count_snow[theOrd[1]],  gup_maxgap_frac_filled[theOrd[1]],    gup_rsq[theOrd[1]],   
+                   gdown_numObs[theOrd[1]], gdown_maxgap_frac[theOrd[1]], gdown_maxgap_frac_count_snow[theOrd[1]], gdown_maxgap_frac_filled[theOrd[1]], gdown_rsq[theOrd[1]], 
+                   matrix(NA,pheno_pars$numLyrsCycle2),
+                   numObs, numObs_count_snow, maxGap_annual, maxGap_annual_count_snow)
           
         } else {
           #If the second cycle had enough observations, report both
           out <- c(numCyc, 
-                   phen1, comp1, seg_min[theOrd[1]], seg_max[theOrd[1]], seg_int[theOrd[1]],
-                   gup_rsq[theOrd[1]], gup_numObs[theOrd[1]], gup_maxgap_frac[theOrd[1]], gup_maxgap_frac_filled[theOrd[1]], 
-                   gdown_rsq[theOrd[1]],gdown_numObs[theOrd[1]], gdown_maxgap_frac[theOrd[1]], gdown_maxgap_frac_filled[theOrd[1]],
-                   phen2, comp2, seg_min[theOrd[2]], seg_max[theOrd[2]], seg_int[theOrd[2]],
-                   gup_rsq[theOrd[2]], gup_numObs[theOrd[2]], gup_maxgap_frac[theOrd[2]], gup_maxgap_frac_filled[theOrd[2]], 
-                   gdown_rsq[theOrd[2]], gdown_numObs[theOrd[2]], gdown_maxgap_frac[theOrd[2]], gdown_maxgap_frac_filled[theOrd[2]])
+                   phen1, seg_max[theOrd[1]], seg_amp[theOrd[1]], seg_int[theOrd[1]], comp1, 
+                   gup_numObs[theOrd[1]],   gup_maxgap_frac[theOrd[1]],   gup_maxgap_frac_count_snow[theOrd[1]],   gup_maxgap_frac_filled[theOrd[1]],   gup_rsq[theOrd[1]],   
+                   gdown_numObs[theOrd[1]], gdown_maxgap_frac[theOrd[1]], gdown_maxgap_frac_count_snow[theOrd[1]], gdown_maxgap_frac_filled[theOrd[1]],  gdown_rsq[theOrd[1]], 
+                   phen2, seg_max[theOrd[2]], seg_amp[theOrd[2]], seg_int[theOrd[2]], comp2, 
+                   gup_numObs[theOrd[2]],   gup_maxgap_frac[theOrd[2]],   gup_maxgap_frac_count_snow[theOrd[2]],   gup_maxgap_frac_filled[theOrd[2]],   gup_rsq[theOrd[2]],   
+                   gdown_numObs[theOrd[2]], gdown_maxgap_frac[theOrd[2]], gdown_maxgap_frac_count_snow[theOrd[2]], gdown_maxgap_frac_filled[theOrd[2]],  gdown_rsq[theOrd[2]], 
+                   numObs, numObs_count_snow, maxGap_annual, maxGap_annual_count_snow)
         }
       }
     },silent=TRUE)  #End of the try block
@@ -1584,33 +1694,330 @@ DoPhenologyHLS_Climatology <- function(b1, b2, b3, b4, b5, b6, evi2, snowPix, da
 
 
 
-CreateQA <- function(tile,yr,phenoFold,waterMask,baseImage,pheno_pars) {
-  
-  dType <- 'INT1U';naVal <- 255
-  
-  NumCycles <- readGDAL(paste0(phenoFold,'y',yr,'/LSP_',tile,'_',yr,'_NumCycles.tif'),silent=T)$band1
-  
-  qaNames <- c('gupQA','gupQA_2','gdownQA','gdownQA_2')
-  rNames <- c('gupRsq','gupRsq_2','gdownRsq','gdownRsq_2')
-  mgNames <- c('gupMaxGap','gupMaxGap_2','gdownMaxGap','gdownMaxGap_2')
-  mgfNames <- c('gupMaxGapFilled','gupMaxGapFilled_2','gdownMaxGapFilled','gdownMaxGapFilled_2')
-  
-  for (q in 1:length(qaNames)) {
-    #GUP QA for cycle 1
-    Rsq <- readGDAL(paste0(phenoFold,'y',yr,'/LSP_',tile,'_',yr,'_',rNames[q],'.tif'),silent=T)$band1 / 10000
-    maxGap <- readGDAL(paste0(phenoFold,'y',yr,'/LSP_',tile,'_',yr,'_',mgNames[q],'.tif'),silent=T)$band1
-    maxGapFill <- readGDAL(paste0(phenoFold,'y',yr,'/LSP_',tile,'_',yr,'_',mgfNames[q],'.tif'),silent=T)$band1
 
-    Qual <- matrix(0,length(NumCycles))
-    Qual[Rsq > pheno_pars$r2_qa & maxGap <= pheno_pars$maxGap_qa[1]]  <- 1     #High quality pixel
-    Qual[Rsq > pheno_pars$r2_qa & (maxGap > pheno_pars$maxGap_qa[1] & maxGap <= pheno_pars$maxGap_qa[2])]  <- 2      #Moderate quality pixel
-    Qual[Rsq > pheno_pars$r2_qa & (maxGap > pheno_pars$maxGap_qa[2] & maxGapFill <= pheno_pars$maxGap_qa[2])]  <- 3  #Poor quality, but a successful fill with other years
-    Qual[Rsq <= pheno_pars$r2_qa | (maxGap > pheno_pars$maxGap_qa[2] & maxGapFill > pheno_pars$maxGap_qa[2])]  <- 4   #Poor quality, and unsuccessful fill with other years, or low R2 fit (< 0.75)
-    Qual[NumCycles == 0 | is.na(Rsq)] <- 5                                                                          #No cycles detected for this pixel
-    Qual[waterMask == 1] <- 6                                                                                        #Water pixel, phenology code wasn't run
-    outName <- paste0(phenoFold,'y',yr,'/LSP_',tile,'_',yr,'_',qaNames[q],'.tif')
-    rast <- setValues(baseImage,Qual)  #Convert to raster using base image
-    writeRaster(rast,filename=outName,format='GTiff',overwrite=TRUE,datatype=dType,NAflag=naVal) 
-  }
+#---------------------------------------------------------------------
+#Function to create QA layer for each file
+#Created using layers from "Extended_QA" netCDF file (must be created before this is run)
+#Written by Douglas Bolton
+#---------------------------------------------------------------------
+CreateQA <- function(qaFile, waterMask, yr, params) {
+  qa_pars <- params$qa_parameters
+  ncFile <- nc_open(qaFile)
+  
+  
+  rNames <- c('gupRsq','gdownRsq',  'gupRsq_2','gdownRsq_2')
+  gNames <- c('gupMaxGap','gdownMaxGap', 'gupMaxGap_2','gdownMaxGap_2')
+  gsNames <- c('gupMaxGapCountSnow','gdownMaxGapCountSnow',  'gupMaxGapCountSnow','gdownMaxGapCountSnow')
+  gfNames <- c('gupMaxGapFilled','gdownMaxGapFilled',  'gupMaxGapFilled_2','gdownMaxGapFilled_2')
+  
+  qaSegs <- matrix(NA,numPix,length(rNames))
+  for (q in 1:length(rNames)) {
+    
+    Rsq <- ncvar_get(ncFile, rNames[q]) / 10000
+    maxGap <- ncvar_get(ncFile, gNames[q])
+    maxGapCountSnow <- ncvar_get(ncFile, gsNames[q])
+    maxGapFill <- ncvar_get(ncFile, gfNames[q])
+ 
+    nrows <- dim(Rsq)[1]
+    ncols <- dim(Rsq)[2] 
+    
+    #Fill QA classes backwards
+    qual <- matrix(6,nrows,ncols)                                                           #Start with all pixels as "No cycles detected"
+    qual[(Rsq <= qa_pars$min_r2_mod_quality | maxGapFill > qa_pars$maxGap_mod_quality)]  <- 5           #Phenology detected, but poor quality    
+    qual[Rsq > qa_pars$min_r2_mod_quality & maxGapFill <= qa_pars$maxGap_mod_quality]  <- 4             #Moderate quality with snow filled values and fills from alternate years
+    qual[Rsq > qa_pars$min_r2_mod_quality & maxGapCountSnow <= qa_pars$maxGap_mod_quality]  <- 3        #Moderate quality with snow filled values
+    qual[Rsq > qa_pars$min_r2_mod_quality & maxGap <= qa_pars$maxGap_mod_quality]  <- 2                 #Moderate quality pixel
+    qual[Rsq > qa_pars$min_r2_high_quality & maxGap <= qa_pars$maxGap_high_quality]  <- 1               #High quality pixel
+  
+    #For 2016 - Label first/last two rows/cols as class 6 (Unrealiable HLS data)
+    if (yr == 2016) {
+      qual[1:2,] <- 9
+      qual[,1:2] <- 9
+      qual[(nrows-1):nrows,] <- 9
+      qual[,(ncols-1):ncols] <- 9
+    }
+    qual <- matrix(qual,nrows*ncols)
+    qual[waterMask == 1] <- 10       #Water pixel, phenology code wasn't run
+    
+    qaSegs[,q] <- qual
 }
+
+  
+  numObs <- ncvar_get(ncFile, "numObs")
+  numObsCountSnow <- ncvar_get(ncFile, "numObsCountSnow")
+  maxGap <- ncvar_get(ncFile, "maxGap")
+  maxGapCountSnow <- ncvar_get(ncFile, "maxGapCountSnow")
+  
+  #quality based on annual layers (8 == poor, 7 = moderate, 6 = high)
+  cycle_1 <- matrix(8,dim(numObs)[1],dim(numObs)[2])                         #start all as poor quality
+  cycle_1[maxGapCountSnow <= 30 & numObsCountSnow > 23] <- 7                 #moderate quality if average of 2 images per month and no gap > a month (counting snow)
+  cycle_1[maxGap <= 30 & numObs > 23] <- 6                                   #high quality if average of 2 images per month and no gap > a month (not counting snow)
+  cycle_1 <- matrix(cycle_1, dim(numObs)[1]*dim(numObs)[2])    
+  cycle_2 <- cycle_1
+  
+  cycle_1[qaSegs[,1] == 10] <- 10; cycle_1[qaSegs[,1] == 9] <- 9
+  cycle_2[qaSegs[,1] == 10] <- 10; cycle_2[qaSegs[,1] == 9] <- 9
+  
+  for (i in seq(5,1)) {
+    cycle_1[qaSegs[,1] <= i & qaSegs[,2] <= i] <- i
+    cycle_2[qaSegs[,3] <= i & qaSegs[,4] <= i] <- i
+  }
+  
+  qaOut <- cbind(cycle_1, cycle_2, qaSegs)
+  
+  
+  return(qaOut)
+}
+
+
+
+
+
+
+
+
+
+
+
+#NetCDF functions
+########################################
+#Data are to be delivered to the LP-DAAC as netCDF files
+#The following functions convert data into netCDF files
+
+
+
+
+#---------------------------------------------------------------------
+#Reconstruct output images from chunks (.Rds) in order to make netCDF
+#Written by Douglas Bolton
+#---------------------------------------------------------------------
+readLyrChunks <- function(lyr, yr, numChunks, numPix, tempDir) {
+  mat <- matrix(NA,numPix,1)
+  for (n in 1:numChunks) {
+    fileName <- paste0(tempDir,'outputs/y',yr,'/lyr',lyr,'/c',n,'.Rds')
+    matSub <- try(readRDS(fileName),silent=T)
+    if (inherits(matSub, 'try-error')) {next} 
+    mat[chunkStart[n]:chunkEnd[n]] <- matSub
+  }
+  return(mat)
+}
+
+
+#---------------------------------------------------------------------
+#Get spatial info from HLS file
+#Will need in order to write spatial attribute info to netcdf file
+#Written by Douglas Bolton
+#---------------------------------------------------------------------
+getNetCDF_projection_info <- function(baseImage) {
+
+  #Get extent, and then define pixel centers in the x and y direction
+  ext = extent(baseImage)
+  res = res(baseImage)[1]
+  if (res == 60) {res <-  10}              #Error in metadata for S10, where resolutions is written as 60m. Change to 10m.  
+
+  x = seq(ext[1]+res/2,ext[1]+ncol(baseImage)*res, res)
+  y = seq(ext[3]+res/2,ext[3]+nrow(baseImage)*res, res)
+  
+  #Define dimensions for netCDF file
+  dimx = ncdim_def(name = 'x', longname = 'x coordinate', units='m', vals = as.double(x))
+  dimy = ncdim_def(name = 'y', longname = 'y coordinate', units='m', vals = rev(as.double(y)))
+  
+  #Get projection in wkt format
+  wkt <- showWKT(projection(baseImage))  
+  
+  #Need to pull the central meridian from the wkt 
+  spt <- unlist(strsplit(gsub(']','',wkt),','))
+  central_meridian <- as.numeric(spt[which(spt == "PARAMETER[\"central_meridian\"")+1])
+  
+  #Need "geoTransform" data for netcdf (top left corner coordinates and resolution)
+  geoTransform <- paste(ext[1],res,0,ext[4],0,-res)
+  
+  return(list(dimx=dimx,dimy=dimy, wkt=wkt, central_meridian=central_meridian, geoTransform=geoTransform))
+}
+
+
+
+
+#---------------------------------------------------------------------
+#Add attributes to each layer in netCDF file
+#Attributes and layer names are defined in MuSLI_LSP_V1_Layers.csv file
+#Written by Douglas Bolton
+#---------------------------------------------------------------------
+put_layer_attributes <- function(ncFile, lyr) {
+  ncatt_put(ncFile,lyr$short_name,"scale",lyr$scale)
+  ncatt_put(ncFile,lyr$short_name,"offset",lyr$offset)
+  ncatt_put(ncFile,lyr$short_name,"data_type",lyr$data_type)
+  ncatt_put(ncFile,lyr$short_name,"valid_min",lyr$valid_min)
+  ncatt_put(ncFile,lyr$short_name,"valid_max",lyr$valid_max)
+  ncatt_put(ncFile,lyr$short_name,"grid_mapping","transverse_mercator")  
+}
+
+
+
+#---------------------------------------------------------------------
+#Add spatial info to netCDF file
+#Most spatial info for UTM defined in .json file
+#However, logitude_of_central_meridian, wkt, and geoTransoform vary per tile/utm
+#Written by Douglas Bolton
+#---------------------------------------------------------------------
+put_prj_attributes <- function(ncFile, prj_info, prj_pars) {
+  #First, define variables that do change across tile/utm
+  prj_pars$longitude_of_central_meridian <- prj_info$central_meridian
+  prj_pars$spatial_ref <- prj_info$wkt
+  prj_pars$GeoTransform <- prj_info$geoTransform
+  
+  #Now loop through all variables in prj_pars and add to "transverse_mercator" variable
+  for (i in 1:length(prj_pars)) {ncatt_put(ncFile,"transverse_mercator",names(prj_pars[i]),prj_pars[[i]])}
+}
+
+
+#---------------------------------------------------------------------
+#Define global attributes for netCDF file
+#All global attributes are defined in .json file
+#Will add same attributes to both product layer and extended qa
+#Written by Douglas Bolton
+#---------------------------------------------------------------------
+put_global_attributes <- function(ncFile, global_pars, extendedQA=FALSE) {
+  #if it's the extended qa layer, add "- Extended QA" to the name
+  if (extendedQA) {global_pars$title <- paste(global_pars$title,'- Extended QA')}  
+  #Loop through all global attributes
+  for (i in 1:length(global_pars)) {ncatt_put(ncFile,0,names(global_pars[i]),global_pars[[i]])}
+}
+  
+  
+
+#---------------------------------------------------------------------
+#Function to create an extended QA layer for each cycle
+#These are the layers that are used to build the QA classes and may be useful for refining qa
+#Written by Douglas Bolton
+#---------------------------------------------------------------------
+CreateExtendedQA <- function(yr, qaFile, productTable, baseImage, params) {
+  
+  numChunks <- params$setup$numChunks                       #Get number of image chunks
+  numPix <- dim(baseImage)[1] * dim(baseImage)[2]           #get total number of pixels 
+  
+  qaLyrs <- productTable[!is.na(productTable$qa_lyr),]      #determine which layers are to be included in extended qa (defined in MuSLI_LSP_V1_Layers.csv)
+  qaLyrs <- qaLyrs[order(qaLyrs$qa_lyr),]                   #order the layers
+  
+  
+  prj_info <- getNetCDF_projection_info(baseImage)          #Get required spatial info from an HLS image
+  
+  results<-vector("list", dim(qaLyrs)[1]+1)                                 #create list where netCDF variables will be defined (spatial variable + qa layers)
+  results[[1]] <- ncvar_def("transverse_mercator","",list(),prec="char")    #Define a spatial variable for the file (1st variable)
+  
+  #Loop through the layers, define a variable for each layer
+  for (i in 1:dim(qaLyrs)[1]) {
+    lyr <- qaLyrs[i,]          #Pull info for layer
+    
+    #Create the variable, add to the list. Define the short_name, units, fill_value, long_name, and precision from the lyrs table
+    results[[i+1]] <- ncvar_def(lyr$short_name, lyr$units, list(prj_info$dimx,prj_info$dimy), lyr$fill_value, lyr$long_name, prec='short', compression=2)    
+  }
+  
+  
+  # Now create the netCDF file with the defined variables
+  if (file.exists(qaFile)) {file.remove(qaFile)};
+  ncFile <- nc_create(qaFile,results,force_v4=T)
+  
+  #Loop through layers again, write the image data to the file
+  for (i in 1:dim(qaLyrs)[1]) {
+    lyr <- qaLyrs[i,]
+    
+    data <- readLyrChunks(lyr$calc_lyr, yr, numChunks, numPix, params$dirs$tempDir)     #Read all image chunks to recreate full image
+    data <- matrix(data, dim(baseImage)[1], dim(baseImage)[2])           #Need to flip image for netcdf. The next lines do this
+    
+    data[data < -32767 | data > 32767] <- 32767     #Ensure no values are outside the range
+    ncvar_put(ncFile,results[[i+1]], data)      #Now put the image into the file
+    
+    put_layer_attributes(ncFile, lyr)           #Put in attributes for the layer
+      
+  }
+  
+  put_prj_attributes(ncFile,prj_info, params$netcdf$transverse_mercator)   #Add spatial info to file
+  put_global_attributes(ncFile, params$netcdf$global, extendedQA=TRUE)     #Add global attributes to file
+  
+  nc_close(ncFile)    #Close the file
+  
+}
+  
+
+
+
+
+
+
+#---------------------------------------------------------------------
+#Function to generate netCDF file for the product
+#The layers to be included in the product are defined in MuSLI_LSP_V1_Layers.csv
+#Written by Douglas Bolton
+#---------------------------------------------------------------------
+CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, waterMask, params) {
+  
+  numChunks <- params$setup$numChunks                       #Get number of image chunks
+  numPix <- dim(baseImage)[1] * dim(baseImage)[2]           #Get number of image pixels
+  startDate <- as.numeric(as.Date(paste0(yr-1,'-12-31')))   #Determine date to subtract from each raster to get DOY
+  
+  qaLyrs <- CreateQA(qaFile, waterMask, yr, params)         #Create the QA layers (QA classes created from extended QA layer)
+    
+  lyrs <- productTable[!is.na(productTable$product_lyr),]   #Determine layers to include in product
+  lyrs <- lyrs[order(lyrs$product_lyr),]                    #Determine order of layers in product
+  
+  prj_info <- getNetCDF_projection_info(baseImage)          #Get required spatial info from an HLS image
+  
+  results<-vector("list", dim(lyrs)[1]+1)                             #Create list where netCDF variables will be defined (spatial variable + qa layers)
+  results[[1]] <- ncvar_def("transverse_mercator","",list(),prec="char")    #Define a spatial variable for the file (1st variable)
+  
+  #Loop through the layers, define a variable for each layer
+  for (i in 1:dim(lyrs)[1]) {
+    lyr <- lyrs[i,]   #Pull info for layer
+    
+    #Create the variable, add to the list. Define the short_name, units, fill_value, long_name, and precision from the lyrs table
+    results[[i+1]] <- ncvar_def(lyr$short_name, lyr$units, list(prj_info$dimx,prj_info$dimy), lyr$fill_value, lyr$long_name, prec='short', compression=2)   
+  }
+  
+  
+  # Now create the netCDF file with the defined variables
+  ncFile <- nc_create(productFile,results,force_v4=T)
+  
+  #Loop through layers again, write the image data to the file
+  for (i in 1:length(lyrs$short_name)) {
+    lyr <- lyrs[i,]
+    
+    
+    if (lyr$short_name == 'overallQA') {data <- qaLyrs[,1]
+    } else if  (lyr$short_name == 'overallQA_2') {data <- qaLyrs[,2]
+    } else if  (lyr$short_name == 'gupQA') {data <- qaLyrs[,3]
+    } else if  (lyr$short_name == 'gdownQA') {data <- qaLyrs[,4]
+    } else if  (lyr$short_name == 'gupQA_2') {data <- qaLyrs[,5]
+    } else if  (lyr$short_name == 'gdownQA_2') {data <- qaLyrs[,6]
+    } else {   data <- readLyrChunks(lyr$calc_lyr, yr, numChunks, numPix, params$dirs$tempDir)} #Read all image chunks to recreate full image
+               
+    data <- matrix(data, dim(baseImage)[1], dim(baseImage)[2])           #Need to flip image for netcdf. The next lines do this
+
+    if (lyr$units == 'Day of year') {data <- data - startDate}    #If units are Day of year, convert from date to day of year
+    
+    
+    data[data < -32767 | data > 32767] <- 32767      #Ensure no values are outside the range
+    ncvar_put(ncFile,results[[i+1]], data)           #Now put the image into the file
+    
+    put_layer_attributes(ncFile, lyr)                #Put in attributes for the layer
+    
+  }
+  
+  put_prj_attributes(ncFile,prj_info, params$netcdf$transverse_mercator)   #Put spatial info 
+  put_global_attributes(ncFile, params$netcdf$global)                      #Put global attributes
+  
+  nc_close(ncFile)    #Close the file
+  
+}
+
+
+
+
+
+
+
+
+
+
+
 
