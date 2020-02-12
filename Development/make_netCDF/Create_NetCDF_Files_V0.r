@@ -31,7 +31,7 @@ inBase <- '/projectnb/modislc/users/dbolt/AWS_results/tiles/'
 outBase <- '/projectnb/modislc/users/dbolt/AWS_results/V0_1/' 
 
 
-lyrs <- read.csv('~/CodeFolder/git_repos/MSLSP/supporting/make_netCDF/MSLSP_Layers_V0.csv',header=T,stringsAsFactors = F)
+lyrs <- read.csv('~/MSLSP/Development/make_netCDF/MSLSP_Layers_V0.csv',header=T,stringsAsFactors = F)
 
 lyrs <- lyrs[!is.na(lyrs$product_lyr),]
 lyrs <- lyrs[order(lyrs$product_lyr),]
@@ -53,7 +53,6 @@ for (yr in yrs) {
         if (!dir.exists(outFold)) {dir.create(outFold)}
         
         
-        
         #Get a base imageto pull raster info from     
         baseImage <- raster(paste0(inRast_Base, 'EVImax.tif'))
         
@@ -64,8 +63,8 @@ for (yr in yrs) {
         y = seq(ext[3]+res/2,ext[4]-res/2, res)
         
         #Define dimensions for netCDF file
-        dimx = ncdim_def(name = 'x', longname = 'x coordinate', units='m', vals = as.double(x))
-        dimy = ncdim_def(name = 'y', longname = 'y coordinate', units='m', vals = rev(as.double(y)))
+        dimx = ncdim_def(name = 'projection_x_coordinate', units='m', vals = as.double(x))
+        dimy = ncdim_def(name = 'projection_y_coordinate', units='m', vals = rev(as.double(y)))
         
         #Define a projection variable for the file
         prj_def <- ncvar_def("transverse_mercator","",list(),prec="char")
@@ -116,8 +115,8 @@ for (yr in yrs) {
         
         #Now we need to write the projection info the the transverse_mercator variable
         
-        wkt <- showWKT(projection(baseImage))  #Get projection in wkt format
-        
+        wkt <- showWKT(projection(baseImage), morphToESRI = FALSE)  #Get projection in wkt format
+        wkt2 <-capture.output(cat(wkt))
         #Need to pull the central meridian from the wkt (Hopefull this will always work?)
         spt <- unlist(strsplit(gsub(']','',wkt),','))
         central_meridian <- as.numeric(spt[which(spt == "PARAMETER[\"central_meridian\"")+1])
@@ -133,7 +132,7 @@ for (yr in yrs) {
         ncatt_put(ncout,"transverse_mercator","longitude_of_prime_meridian",0)
         ncatt_put(ncout,"transverse_mercator","semi_major_axis",6378137)
         ncatt_put(ncout,"transverse_mercator","inverse_flattening",298.257223563)
-        ncatt_put(ncout,"transverse_mercator","spatial_ref",wkt)
+        ncatt_put(ncout,"transverse_mercator","spatial_ref",gsub("\\", "", wkt, fixed=TRUE))
         ncatt_put(ncout,"transverse_mercator","GeoTransform",paste(ext[1],res,0,ext[4],0,-res))  #I think this should work?
         
         
