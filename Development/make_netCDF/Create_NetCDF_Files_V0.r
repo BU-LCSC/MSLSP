@@ -19,7 +19,7 @@ library(ncdf4)
 
 
 
-numCores=8
+numCores=28
 
 yrs <- 2016:2018
 
@@ -41,7 +41,6 @@ for (yr in yrs) {
 
   inDir <- paste0(inBase,yr,'/')
   tiles <- list.dirs(inDir,recursive=F,full.names=F)
-  tiles <- c('18TYN','11SLV','04WFA','17SKV','15SXS')
 
   imgLog <- foreach(t=1:length(tiles),.combine=c) %dopar% {
       
@@ -63,8 +62,9 @@ for (yr in yrs) {
         y = seq(ext[3]+res/2,ext[4]-res/2, res)
         
         #Define dimensions for netCDF file
-        dimx = ncdim_def(name = 'projection_x_coordinate', units='m', vals = as.double(x))
-        dimy = ncdim_def(name = 'projection_y_coordinate', units='m', vals = rev(as.double(y)))
+        dimx = ncdim_def(name = 'x', longname = 'x coordinate', units='m', vals = as.double(x))
+        dimy = ncdim_def(name = 'y', longname = 'y coordinate', units='m', vals = rev(as.double(y)))
+
         
         #Define a projection variable for the file
         prj_def <- ncvar_def("transverse_mercator","",list(),prec="char")
@@ -160,6 +160,9 @@ for (yr in yrs) {
         
         ncatt_put(ncout,0,"acknowledgement","Developed with funding from NASA LCLUC Grant #80NSSC18K0334. Data archiving and distribution supported by the NASA NSIDC Distributed Active Archive Center (DAAC).")
         
+        #Put additional attributes on coordinates
+        ncatt_put(ncout,"x","standard_name","projection_x_coordinate")
+        ncatt_put(ncout,"y","standard_name","projection_y_coordinate")
         
         nc_close(ncout)
         
