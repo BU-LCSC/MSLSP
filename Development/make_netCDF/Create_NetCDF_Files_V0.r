@@ -142,9 +142,9 @@ for (yr in yrs) {
         ncatt_put(ncout,0,"product_version","v0.1")
         ncatt_put(ncout,0,"summary","A 30m Land Surface Phenology Product for North America derived from Landsat and Sentinel-2 imagery")
         
-        ncatt_put(ncout,0,"algorithm theoretical basis document","LINK NEEDED")
-        ncatt_put(ncout,0,"user guide","LINK NEEDED")
-        ncatt_put(ncout,0,"software_repository","git@github.com:BU-LCSC/MuSLI_LSP.git")
+        #ncatt_put(ncout,0,"algorithm theoretical basis document","Under development")
+        #ncatt_put(ncout,0,"user guide","Under development")
+        ncatt_put(ncout,0,"software_repository","git@github.com:BU-LCSC/MSLSP.git")
         
         ncatt_put(ncout,0,"reference","Bolton, D.K., Gray, J.M., Melaas, E.K., Moon, M., Eklundh, L, Friedl, M.A., 2020. Continental-Scale Land Surface Phenology from Harmonized Landsat 8 and Sentinel-2 Imagery. Remote Sensing of Environment")
         
