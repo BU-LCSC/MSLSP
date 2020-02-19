@@ -65,8 +65,9 @@ params <- fromJSON(file=jsonFile)
 
 
 #Alter the jsonFile?
-params$phenology_parameters$splineSpar=0.2      #Alter the smoothing parameter
-
+params$phenology_parameters$splineSpar=0.3      #Alter the smoothing parameter
+params$phenology_parameters$min_seg_amplitude=0.03    #Set minimum seg amplitude
+#params$phenology_parameters$vegetation_index='ndvi_re1'  #Alter the vegetation index (Find list of vegetation indices in MSLSP_Functions.r file: CalcIndex function)
 
 
 
@@ -155,12 +156,11 @@ for (i in 1:length(theTable)) {
     png(output_name,res = 600,width = 6,height = 3.5,units = "in",pointsize = 8)
     par(fig=c(0.02,.98,.02,.98),mai=c(0.33,0.33,.3,.1),mgp=c(1.5,0.2,0))
     
-    xlims <- as.Date(c(paste0(min(yrsToPlot)-2,'-11-1'),paste0(max(yrsToPlot)+1,'-02-1')))  #Always use the first of a month! (for labelling purposes)
     ylims <-  c(0.05,0.9)
     
     plot(pixTab$original_VI~pixTab$dates,
          type='n',
-         xlim=xlims,ylim=ylims,tck=0.025,
+         ylim=ylims,tck=0.025,
          xlab='Date',ylab='EVI2',xaxt='n',
          main=paste(idName,codeVersion))
     
@@ -179,10 +179,9 @@ for (i in 1:length(theTable)) {
     if (showObservations) {points(pixTab$filled_VI~pixTab$dates,pch=21,bg='#2c7fb8')}
     if (showSnow) {points(pixTab$filled_VI[pixTab$snowPix]~pixTab$dates[pixTab$snowPix],pch=21,bg='black')}
     
-    
-    axis.Date(1,at=seq(xlims[1], xlims[2],by="months"),
-              labels=format(seq(xlims[1], xlims[2],by="months"),'%b'),
-              tck=0.025)
+    #axis.Date(1,at=seq(xlims[1], xlims[2],by="months"),
+    #          labels=format(seq(xlims[1], xlims[2],by="months"),'%b'),
+    #          tck=0.025)
     dev.off()
 }
           

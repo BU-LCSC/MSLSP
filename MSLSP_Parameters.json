@@ -62,7 +62,7 @@
     
     "doComposites":true,
     
-    "min_seg_amplitude":0.1,  
+    "min_seg_amplitude":0.03,  
     "min_increase_length":30,   
     "max_increase_length":185,   
     "min_decrease_length":30,   
