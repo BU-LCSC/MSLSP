@@ -26,7 +26,7 @@ yrs <- 2016:2018
 #Register the parallel backend
 registerDoMC(cores=numCores)
 
-  inBase <- '/projectnb/modislc/users/dbolt/AWS_results/tiles/'
+inBase <- '/projectnb/modislc/users/dbolt/AWS_results/tiles/'
 
 outBase <- '/projectnb/modislc/users/mkmoon/MuSLI/V0_1/' 
 
