@@ -13,7 +13,7 @@ module load gdal/2.3.2
 
 #Run the script
 ######################
-Rscript /usr2/postdoc/dbolt/MSLSP/Development/make_netCDF/Create_NetCDF_Files_V0.r 
+Rscript /usr3/graduate/mkmoon/MSLSP/Development/make_netCDF/Create_NetCDF_Files_V0.r 
 
 
 
