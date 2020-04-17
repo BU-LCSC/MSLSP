@@ -26,9 +26,9 @@ yrs <- 2016:2018
 #Register the parallel backend
 registerDoMC(cores=numCores)
 
-inBase <- '/projectnb/modislc/users/dbolt/AWS_results/tiles/'
+  inBase <- '/projectnb/modislc/users/dbolt/AWS_results/tiles/'
 
-outBase <- '/projectnb/modislc/users/dbolt/AWS_results/V0_1/' 
+outBase <- '/projectnb/modislc/users/mkmoon/MuSLI/V0_1/' 
 
 
 lyrs <- read.csv('~/MSLSP/Development/make_netCDF/MSLSP_Layers_V0.csv',header=T,stringsAsFactors = F)
