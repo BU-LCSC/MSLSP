@@ -114,14 +114,14 @@ for (yr in yrs) {
           if(i<20){ # NumCycles, phenometrics and EVI layers
             mat[matEVImax  >10000] <- NA  
             mat[matEVIamp  >10000] <- NA  
-            mat[matEVIarea >37000] <- NA  
+            mat[matEVIarea >32766] <- NA  
             mat[matEVImax  <0    ] <- NA  
             mat[matEVIamp  <0    ] <- NA  
             mat[matEVIarea <0    ] <- NA 
             
             mat[matEVImax_2  >10000] <- NA  
             mat[matEVIamp_2  >10000] <- NA  
-            mat[matEVIarea_2 >37000] <- NA  
+            mat[matEVIarea_2 >32766] <- NA  
             mat[matEVImax_2  <0    ] <- NA  
             mat[matEVIamp_2  <0    ] <- NA  
             mat[matEVIarea_2 <0    ] <- NA 
@@ -129,19 +129,18 @@ for (yr in yrs) {
           }else{ # QA layers
             mat[matEVImax  >10000] <- 5 # No cycle detected 
             mat[matEVIamp  >10000] <- 5  
-            mat[matEVIarea >37000] <- 5  
+            mat[matEVIarea >32766] <- 5  
             mat[matEVImax  <0    ] <- 5  
             mat[matEVIamp  <0    ] <- 5  
             mat[matEVIarea <0    ] <- 5 
             
             mat[matEVImax_2  >10000] <- 5  
             mat[matEVIamp_2  >10000] <- 5  
-            mat[matEVIarea_2 >37000] <- 5  
+            mat[matEVIarea_2 >32766] <- 5  
             mat[matEVImax_2  <0    ] <- 5  
             mat[matEVIamp_2  <0    ] <- 5  
             mat[matEVIarea_2 <0    ] <- 5  
           }
-          
           
           
           ncvar_put(ncout,results[[i+1]], mat)      #Now put the image into the file
