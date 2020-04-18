@@ -17,7 +17,7 @@ product_lyr,short_name,long_name,units,scale,offset,data_type,valid_min,valid_ma
 16,OGMn_2,Cycle 2 - Onset Greenness Minimum (Date of 85% greenness decrease) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - Onset Greenness Minimum (Date of 85% greenness decrease) 
 17,EVImax_2,Cycle 2 - Maximum EVI2 during vegetation cycle,-,0.0001,0,Int16,0,10000,32767,Cycle 2 - Maximum EVI2 during vegetation cycle
 18,EVIamp_2,Cycle 2 - EVI2 Amplitude during vegetation cycle ,-,0.0001,0,Int16,0,10000,32767,Cycle 2 - EVI2 Amplitude during vegetation cycle 
-19,EVIarea_2,Cycle 2 - Integrated EVI2 during vegetation cycle ,-,0.01,0,Int16,0,10000,32767,Cycle 2 - Integrated EVI2 during vegetation cycle 
+19,EVIarea_2,Cycle 2 - Integrated EVI2 during vegetation cycle ,-,0.01,0,Int16,0,37000,32767,Cycle 2 - Integrated EVI2 during vegetation cycle 
 20,gupQA,Quality Assurance for Greenup Segment,-,1,0,Int16,1,7,32767,Quality Assurance for Greenup Segment
 21,gdownQA,Quality Assurance for Greendown Segment,-,1,0,Int16,1,7,32767,Quality Assurance for Greendown Segment
 22,gupQA_2,Quality Assurance for Greenup Segment,-,1,0,Int16,1,7,32767,Quality Assurance for Greenup Segment
