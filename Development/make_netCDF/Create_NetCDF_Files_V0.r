@@ -31,7 +31,7 @@ inBase <- '/projectnb/modislc/users/dbolt/AWS_results/tiles/'
 outBase <- '/projectnb/modislc/users/mkmoon/MuSLI/V0_1/' 
 
 
-lyrs <- read.csv('~/MSLSP/Development/make_netCDF/MSLSP_Layers_V0.csv',header=T,stringsAsFactors = F)
+lyrs <- read.csv('/usr3/graduate/mkmoon/GitHub/MSLSP/Development/make_netCDF/MSLSP_Layers_V0.csv',header=T,stringsAsFactors = F)
 
 lyrs <- lyrs[!is.na(lyrs$product_lyr),]
 lyrs <- lyrs[order(lyrs$product_lyr),]
@@ -100,6 +100,49 @@ for (yr in yrs) {
           #Open the data. Current solution to "WRITE_BOTTOMUP" is 
           #to manually flip the image 
           mat <- matrix(as.numeric(readGDAL(paste0(inRast_Base,lyr$short_name,'.tif'),silent=T)$band1),length(x),length(y))
+          
+          # Where erroneous EVI values (i.e., EVImax >1,EVIamp >1, EVIarea >3700)
+          # assign NAs for NumCycles, phenometrics and EVI layers, and 5 for QA layers
+          matEVImax  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVImax.tif'),silent=T)$band1),length(x),length(y))
+          matEVIamp  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIamp.tif'),silent=T)$band1),length(x),length(y))
+          matEVIarea <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIarea.tif'),silent=T)$band1),length(x),length(y))
+          matEVImax_2  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVImax_2.tif'),silent=T)$band1),length(x),length(y))
+          matEVIamp_2  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIamp_2.tif'),silent=T)$band1),length(x),length(y))
+          matEVIarea_2 <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIarea_2.tif'),silent=T)$band1),length(x),length(y))
+          
+          if(i<20){ # NumCycles, phenometrics and EVI layers
+            mat[matEVImax  >10000] <- NA  
+            mat[matEVIamp  >10000] <- NA  
+            mat[matEVIarea >37000] <- NA  
+            mat[matEVImax  <0    ] <- NA  
+            mat[matEVIamp  <0    ] <- NA  
+            mat[matEVIarea <0    ] <- NA 
+            
+            mat[matEVImax_2  >10000] <- NA  
+            mat[matEVIamp_2  >10000] <- NA  
+            mat[matEVIarea_2 >37000] <- NA  
+            mat[matEVImax_2  <0    ] <- NA  
+            mat[matEVIamp_2  <0    ] <- NA  
+            mat[matEVIarea_2 <0    ] <- NA 
+  
+          }else{ # QA layers
+            mat[matEVImax  >10000] <- 5 # No cycle detected 
+            mat[matEVIamp  >10000] <- 5  
+            mat[matEVIarea >37000] <- 5  
+            mat[matEVImax  <0    ] <- 5  
+            mat[matEVIamp  <0    ] <- 5  
+            mat[matEVIarea <0    ] <- 5 
+            
+            mat[matEVImax_2  >10000] <- 5  
+            mat[matEVIamp_2  >10000] <- 5  
+            mat[matEVIarea_2 >37000] <- 5  
+            mat[matEVImax_2  <0    ] <- 5  
+            mat[matEVIamp_2  <0    ] <- 5  
+            mat[matEVIarea_2 <0    ] <- 5  
+          }
+          
+          
+          
           ncvar_put(ncout,results[[i+1]], mat)      #Now put the image into the file
           
           #Fill in the attributes for the layer from the lyrs table
