@@ -93,6 +93,16 @@ for (yr in yrs) {
         
         #Now loop through the layers again, this time actually 
         #writing the image data to the file
+        
+        # Where erroneous EVI values (i.e., EVImax >1,EVIamp >1, EVIarea >3700, etc.),
+        # assign NAs for NumCycles, phenometrics and EVI layers, and 5 for QA layers
+        matEVImax  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVImax.tif'),silent=T)$band1),length(x),length(y))
+        matEVIamp  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIamp.tif'),silent=T)$band1),length(x),length(y))
+        matEVIarea <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIarea.tif'),silent=T)$band1),length(x),length(y))
+        matEVImax_2  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVImax_2.tif'),silent=T)$band1),length(x),length(y))
+        matEVIamp_2  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIamp_2.tif'),silent=T)$band1),length(x),length(y))
+        matEVIarea_2 <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIarea_2.tif'),silent=T)$band1),length(x),length(y))
+        
         for (i in 1:dim(lyrs)[1]) {
           
           lyr <- lyrs[i,]
@@ -100,15 +110,6 @@ for (yr in yrs) {
           #Open the data. Current solution to "WRITE_BOTTOMUP" is 
           #to manually flip the image 
           mat <- matrix(as.numeric(readGDAL(paste0(inRast_Base,lyr$short_name,'.tif'),silent=T)$band1),length(x),length(y))
-          
-          # Where erroneous EVI values (i.e., EVImax >1,EVIamp >1, EVIarea >3700)
-          # assign NAs for NumCycles, phenometrics and EVI layers, and 5 for QA layers
-          matEVImax  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVImax.tif'),silent=T)$band1),length(x),length(y))
-          matEVIamp  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIamp.tif'),silent=T)$band1),length(x),length(y))
-          matEVIarea <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIarea.tif'),silent=T)$band1),length(x),length(y))
-          matEVImax_2  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVImax_2.tif'),silent=T)$band1),length(x),length(y))
-          matEVIamp_2  <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIamp_2.tif'),silent=T)$band1),length(x),length(y))
-          matEVIarea_2 <- matrix(as.numeric(readGDAL(paste0(inRast_Base,'EVIarea_2.tif'),silent=T)$band1),length(x),length(y))
           
           if(i<20){ # NumCycles, phenometrics and EVI layers
             mat[matEVImax  >10000] <- NA  
