@@ -1,7 +1,7 @@
 
 
-parameters="/usr2/postdoc/dbolt/CodeFolder/git_repos/MSLSP/MSLSP_Parameters.json"
-tileList="tileLists/ag_timeseries.txt"
+parameters="/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
+tileList="tileLists/europe.txt"
 
 
 numCores=$( jq .SCC.numCores $parameters )
