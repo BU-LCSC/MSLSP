@@ -42,9 +42,9 @@
     "workDir":"/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/",
     "logDir":"/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/runLogs/",
     "dataDir":"/projectnb/modislc/projects/landsat_sentinel/v1_4/",
-    "rScript":"/usr2/postdoc/dbolt/CodeFolder/git_repos/MSLSP/MSLSP_Script.r",
-    "rFunctions":"/usr2/postdoc/dbolt/CodeFolder/git_repos/MSLSP/MSLSP_Functions.r",
-    "productTable":"/usr2/postdoc/dbolt/CodeFolder/git_repos/MSLSP/MSLSP_Layers.csv",
+    "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
+    "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
+    "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
     "fmaskFunction":"/usr2/postdoc/dbolt/CodeFolder/others_code/Fmask_4_0_matlab/fmask_compiled/autoFmask_HLS",
     
 
