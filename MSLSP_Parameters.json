@@ -102,7 +102,7 @@
   },
   
   "topocorrection_parameters":{
-    "topoCorrect":true,
+    "topoCorrect":false,
     "numILclass":5,
     "numSamples":1000,
     "topoVIs":["ndvi", "nbr"],      
