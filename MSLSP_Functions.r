@@ -247,7 +247,7 @@ RunFmask <-function(imgName, tile, auxFold, fmaskFold, outDir, params) {
     zone <- zone[length(zone)]
     zone <- as.numeric(substr(zone,1,2))
   
-    system(paste('eval',params$setup$fmaskFunction,tile,fileBase,auxFold,fmaskFold,zone,ulx,uly,sza,saa,vza,vaa)) 
+    system(paste('MCR_CACHE_ROOT=$TMPDIR ',params$setup$fmaskFunction,tile,fileBase,auxFold,fmaskFold,zone,ulx,uly,sza,saa,vza,vaa)) 
     
     #Delete the temporary images
     for (b in bandNames) {file.remove(paste0(fileBase,b,'.tif'))}
