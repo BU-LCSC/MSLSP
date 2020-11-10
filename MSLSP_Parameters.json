@@ -2,10 +2,10 @@
   "setup":{
     
     "imgStartYr":2016,
-    "imgEndYr":2019,
+    "imgEndYr":2018,
     
     "phenStartYr":2016,
-    "phenEndYr":2019,
+    "phenEndYr":2018,
     
     "downloadImagery":true,
     "preprocessImagery":true,
@@ -62,7 +62,7 @@
     
     "doComposites":true,
     
-    "min_seg_amplitude":0.03,  
+    "min_seg_amplitude":0.1,  
     "min_increase_length":30,   
     "max_increase_length":185,   
     "min_decrease_length":30,   
