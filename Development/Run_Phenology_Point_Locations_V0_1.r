@@ -119,7 +119,7 @@ for (i in 1:length(theTable)) {
       subTab <- pixTab[[paste0('y',yr)]]
       
   
-      output_name = paste0(outDir,idName,'_',yr,'_',codeVersion,'.tif')
+      output_name = paste0(outDir,idName,'_',yr,'_',codeVersion,'.png')
       png(output_name,res = 600,width = 6,height = 3.5,units = "in",pointsize = 8)
       par(fig=c(0.02,.98,.02,.98),mai=c(0.33,0.33,.3,.1),mgp=c(1.5,0.2,0))
           
@@ -157,7 +157,7 @@ for (i in 1:length(theTable)) {
     
     
     #Do a full time-series plot. Need to fit new spline
-    output_name = paste0(outDir,idName,'_Full_Series_',codeVersion,'.tif')
+    output_name = paste0(outDir,idName,'_Full_Series_',codeVersion,'.png')
     png(output_name,res = 600,width = 6,height = 3.5,units = "in",pointsize = 8)
     par(fig=c(0.02,.98,.02,.98),mai=c(0.33,0.33,.3,.1),mgp=c(1.5,0.2,0))
     
