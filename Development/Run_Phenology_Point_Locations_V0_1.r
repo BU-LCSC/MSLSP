@@ -23,7 +23,7 @@ library(rjson)
 
 #Tile 
 tile <- '18TYN'
-codeVersion <- 'V1'      #run V0 or V1?
+codeVersion <- 'V0'      #run V0 or V1?
 
 numCores <- 8
 
@@ -42,7 +42,7 @@ outFolder <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/figures/t2_ts/'
 
 
 #Define path to function
-functions_V0 <- '/usr2/postdoc/dbolt/CodeFolder/git_repos/MuSLI_LSP/AWS/r/MuSLI_LSP_Functions.r'
+functions_V0 <- '/usr3/graduate/mkmoon/GitHub/musli/MuSLI_LSP_Functions.r'
 functions_V1 <- '/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r'
 functions_diagnostics <- "/usr3/graduate/mkmoon/GitHub/MSLSP/Development/MSLSP_Diagnostic_Functions_V1_0.r"
 
