@@ -80,10 +80,10 @@ then
   gdalwarp -overwrite -r average -ts 10980 10980 -of GTiff /projectnb/modislc/data/dem/usgs_ned/hls_tiles/slope/slope_${tile}.tif ${imgDir}slope_${tile}.tif
   gdalwarp -overwrite -r average -ts 10980 10980 -of GTiff /projectnb/modislc/data/dem/usgs_ned/hls_tiles/aspect/aspect_${tile}.tif ${imgDir}aspect_${tile}.tif
 else
-  cp /projectnb/modislc/projects/landsat_sentinel/eu_dem/hls_tiles/water/water_${tile}.tif $imgDir
-  cp /projectnb/modislc/projects/landsat_sentinel/eu_dem/hls_tiles/dem/dem_${tile}.tif $imgDir
-  cp /projectnb/modislc/projects/landsat_sentinel/eu_dem/hls_tiles/slope/slope_${tile}.tif $imgDir
-  cp /projectnb/modislc/projects/landsat_sentinel/eu_dem/hls_tiles/aspect/aspect_${tile}.tif $imgDir
+  cp /projectnb/modislc/data/water/hls_tiles/water_${tile}.tif $imgDir
+  cp /projectnb/modislc/data/dem/usgs_ned/hls_tiles/dem/dem_${tile}.tif $imgDir
+  cp /projectnb/modislc/data/dem/usgs_ned/hls_tiles/slope/slope_${tile}.tif $imgDir
+  cp /projectnb/modislc/data/dem/usgs_ned/hls_tiles/aspect/aspect_${tile}.tif $imgDir
 fi
 
 
