@@ -22,34 +22,37 @@ library(rjson)
 ############
 
 #Tile 
-tile <- '10SGF'
+tile <- '18TYN'
 codeVersion <- 'V1'      #run V0 or V1?
 
 numCores <- 8
 
-imgYrs <- 2016:2019
-phenYrs <- 2016:2019
+imgYrs <- 2016:2018
+phenYrs <- 2016:2018
 
 #What data folder
-chunkBase <- '/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/'
+# chunkBase <- '/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/'
+chunkBase <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t2/'
 imgBase <-   '/projectnb/modislc/projects/landsat_sentinel/v1_4/HLS30/'
 
 
 #Define and create output directory
-outFolder <- '/projectnb/modislc/projects/landsat_sentinel/MSLSP_assessment/plots/'
+# outFolder <- '/projectnb/modislc/projects/landsat_sentinel/MSLSP_assessment/plots/'
+outFolder <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/figures/t2_ts/'
 
 
 #Define path to function
 functions_V0 <- '/usr2/postdoc/dbolt/CodeFolder/git_repos/MuSLI_LSP/AWS/r/MuSLI_LSP_Functions.r'
-functions_V1 <- '/usr2/postdoc/dbolt/CodeFolder/git_repos/MSLSP/MSLSP_Functions.r'
-functions_diagnostics <- "/usr2/postdoc/dbolt/CodeFolder/git_repos/MSLSP/supporting/MSLSP_Diagnostic_Functions_V1_0.r"
+functions_V1 <- '/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r'
+functions_diagnostics <- "/usr3/graduate/mkmoon/GitHub/MSLSP/Development/MSLSP_Diagnostic_Functions_V1_0.r"
 
 #Name of shapefile. Must be in same projection as the tile. Must have "id" column
-shpName <- paste0('/projectnb/modislc/projects/landsat_sentinel/MSLSP_assessment/shps/',tile,'_pts.shp')
-
+# shpName <- paste0('/projectnb/modislc/projects/landsat_sentinel/MSLSP_assessment/shps/',tile,'_pts.shp')
+# shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/',tile,'_pts_1.shp')
+shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/rp_mf_1000.shp')
 
 #Json file where phenology parameters are defined. Will just use the phenology paramaters from this 
-jsonFile <- "/projectnb/modislc/projects/landsat_sentinel/MSLSP_assessment/MSLSP_Parameters.json"
+jsonFile <- "/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
 
 
 showObservations <- T
@@ -58,7 +61,7 @@ showPhenDates <- F
 showFilledData <- F
 showDespiked <- F
 showSnow <- F
-yrsToPlot <- 2018:2019
+yrsToPlot <- 2016:2018
 
 #Get default parameters
 params <- fromJSON(file=jsonFile)
@@ -93,6 +96,8 @@ chunkDir <- paste0(chunkBase,tile,'/imageChunks/')
 
 theTable <- Extract_Timeseries(tile, imgDir, chunkDir, imgYrs, phenYrs, numCores, params, shpName=shpName,codeVersion=codeVersion) 
 
+# setwd('/projectnb/modislc/users/mkmoon/Planet/data/')
+# save(theTable,file='rp_mf_hls_1000.rda')
 
 
 #Create output directory if it doesn't exist
