@@ -57,10 +57,10 @@ jsonFile <- "/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
 
 showObservations <- T
 showSpline <- T
-showPhenDates <- F
-showFilledData <- F
-showDespiked <- F
-showSnow <- F
+showPhenDates <- T
+showFilledData <- T
+showDespiked <- T
+showSnow <- T
 yrsToPlot <- 2016:2018
 
 #Get default parameters
