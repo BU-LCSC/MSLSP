@@ -484,7 +484,7 @@ runPhenoChunk_Diagnostic <- function(chunk, pixels, ids, tile, numPix, chunkDir,
 #Extract time series and run phenology code for point locations
 #Douglas Bolton
 #---------------------------------------------------------------------
-Extract_Timeseries <- function(tile, imgDir, chunkDir, imgYrs, phenYrs, numCores, params, codeVersion='V1', pixelNumbers=NULL, shpName=NULL)  {
+Extract_Timeseries <- function(tile, imgDir, chunkDir, imgYrs, phenYrs, numCores, params, codeVersion, pixelNumbers=NULL, shpName=NULL)  {
   
   
   #Sort out image chunks
