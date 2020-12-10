@@ -147,7 +147,7 @@ params <- fromJSON(file=jsonFile)
 
 
 #Alter the jsonFile?
-# params$phenology_parameters$splineSpar=0.4      #Alter the smoothing parameter
+params$phenology_parameters$splineSpar=0.55      #Alter the smoothing parameter
 # params$phenology_parameters$min_seg_amplitude=0.1    #Set minimum seg amplitude
 #params$phenology_parameters$vegetation_index='ndvi_re1'  #Alter the vegetation index (Find list of vegetation indices in MSLSP_Functions.r file: CalcIndex function)
 
