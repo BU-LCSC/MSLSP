@@ -128,9 +128,9 @@ calc_lyr,product_lyr,qa_lyr,short_name,long_name,units,scale,offset,data_type,va
 127,,22,numObsCountSnow,Number of days with clear and snow filled observations in calendar year ,Number,1,0,Int16,0,366,32767,Number of clear and snow filled observations in calendar year 
 128,,23,maxGap,Maximum gap between clear obsevations in calendar year,Days,1,0,Int16,0,366,32767,Maximum gap between clear obsevations in calendar year
 129,,24,maxGapCountSnow,Maximum gap between clear or snow filled observations in calendar year,Days,1,0,Int16,0,366,32767,Maximum gap between clear or snow filled observations in calendar year
-,20,,gupQA,Quality Assurance for Greenup Segment,-,1,0,Int16,1,7,32767,Quality Assurance for Greenup Segment
-,21,,gdownQA,Quality Assurance for Greendown Segment,-,1,0,Int16,1,7,32767,Quality Assurance for Greendown Segment
-,22,,gupQA_2,Quality Assurance for Greenup Segment,-,1,0,Int16,1,7,32767,Quality Assurance for Greenup Segment
-,23,,gdownQA_2,Quality Assurance for Greendown Segment,-,1,0,Int16,1,7,32767,Quality Assurance for Greendown Segment
+,20,,gupQA,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
+,21,,gdownQA,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
+,22,,gupQA_2,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
+,23,,gdownQA_2,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
 ,,,overallQA,Overall Quality Assurance for Cycle 1,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 1
 ,,,overallQA_2,Overall Quality Assurance for Cycle 2,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 2

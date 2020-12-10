@@ -16,7 +16,7 @@ tt <- as.numeric(args[3])
 
 ##
 # tiles <- c('17SQD','18TYN','19TEL','16TCK','13TEF','10TGP')
-path <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t2'
+path <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t4'
 # tiles <- substr(list.dirs(path=path,full.names=T)[2:25],53,57)
 tiles <- substr(list.dirs(path=path,full.names=T)[2:6],56,60)
 
@@ -29,18 +29,19 @@ for(yy in 1:3){
   ##
   # pathSCC <- paste0('/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/',tiles[tt],'/phenoMetrics')
   pathSCC <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/V0_11/',tiles[tt])
-  pathAWS <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t2'
+  pathSCC <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t2/',tiles[tt])
+  pathAWS <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t4/',tiles[tt])
   
   #
   sstr <- paste0('*',tiles[tt],'*',year[yy],'.nc')
   
-  fileSCC <- list.files(pathSCC,pattern=glob2rx(sstr),recursive=T,full.names=T)
-  fileAWS <- list.files(pathAWS,pattern=glob2rx(sstr),recursive=T,full.names=T)
+  fileSCC <- list.files(pathSCC,pattern=glob2rx(sstr),recursive=F,full.names=T)
+  fileAWS <- list.files(pathAWS,pattern=glob2rx(sstr),recursive=F,full.names=T)
   
-  nc <- nc_open(fileSCC)
+  nc <- nc_open(fileAWS)
   var <- names(nc[['var']])
   
-  setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/figures/v0_v1_t2/')
+  setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/figures/t2_t4/')
   for(pp in 3:11){
     rastSCC <- raster(fileSCC,varname=var[pp])
     rastAWS <- raster(fileAWS,varname=var[pp])
