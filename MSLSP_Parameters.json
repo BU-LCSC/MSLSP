@@ -82,7 +82,7 @@
     "maxDespikeIterations":50,   
     
     "splineBuffer":185,               
-    "splineSpar":0.4,   
+    "splineSpar":0.55,   
     
     "gapLengthToFill":20,  
     "maxWeight":0.5,                 
