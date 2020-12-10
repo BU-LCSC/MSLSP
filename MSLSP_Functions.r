@@ -1995,6 +1995,9 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
 
     if (lyr$units == 'Day of year') {data <- data - startDate}    #If units are Day of year, convert from date to day of year
     
+    if (lyr$short_name == 'EVImax' | lyr$short_name == 'EVIamp'| lyr$short_name == 'EVImax_2' | lyr$short_name == 'EVIamp_2') {
+      data[data > 10000] <- 10000      #Set as 10000 for the pixels where EVImax or EVIamp exceed 10000
+    }
     
     data[data < -32767 | data > 32767] <- 32767      #Ensure no values are outside the range
     ncvar_put(ncFile,results[[i+1]], data)           #Now put the image into the file
