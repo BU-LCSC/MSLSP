@@ -1978,6 +1978,28 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
   # Now create the netCDF file with the defined variables
   ncFile <- nc_create(productFile,results,force_v4=T)
   
+  
+  # Assign NA for the EVImax, EVIamp, and EVIare layers where their values exceed 10000, 10000, and 32766, respectively, 
+  # and give 6 (i.e., "No cycles detected") for the pixels in all layers
+  ngEVI <- matrix(0, dim(baseImage)[1], dim(baseImage)[2])           # A layer to screen all pixels having bad EVI values
+    
+  for (i in 1:length(lyrs$short_name)) {
+    lyr <- lyrs[i,]
+    
+    if (lyr$short_name == 'EVImax' | lyr$short_name == 'EVIamp'| lyr$short_name == 'EVImax_2' | lyr$short_name == 'EVIamp_2') {
+      data <- readLyrChunks(lyr$calc_lyr, yr, numChunks, numPix, params$dirs$tempDir)
+      data <- matrix(data, dim(baseImage)[1], dim(baseImage)[2])           #Need to flip image for netcdf. The next lines do this
+      
+      ngEVI[data > 10000] <- 1      #Set as 1 for the pixels where EVImax or EVIamp exceed 10000
+      
+    }else if(lyr$short_name == 'EVIarea' | lyr$short_name == 'EVIarea_2'){
+      data <- readLyrChunks(lyr$calc_lyr, yr, numChunks, numPix, params$dirs$tempDir)
+      data <- matrix(data, dim(baseImage)[1], dim(baseImage)[2])           #Need to flip image for netcdf. The next lines do this
+
+      ngEVI[data > 32766] <- 1      #Set as 1 for the pixels where EVIare exceed 32766
+    }
+  }
+  
   #Loop through layers again, write the image data to the file
   for (i in 1:length(lyrs$short_name)) {
     lyr <- lyrs[i,]
@@ -1995,6 +2017,11 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
 
     if (lyr$units == 'Day of year') {data <- data - startDate}    #If units are Day of year, convert from date to day of year
     
+    if (lyr$short_name == 'overallQA' |lyr$short_name == 'overallQA_2' |lyr$short_name == 'gupQA' |lyr$short_name == 'gdownQA' |lyr$short_name == 'gupQA_2' |lyr$short_name == 'gdownQA_2'){
+      data[ngEVI == 1] <- 6 #Give 6 (i.e., "No cycle detected") for the pixels having bad EVI values 
+    }else{
+      data[ngEVI == 1] <- NA #Give NA for the pixels having bad EVI values 
+    }
     
     data[data < -32767 | data > 32767] <- 32767      #Ensure no values are outside the range
     ncvar_put(ncFile,results[[i+1]], data)           #Now put the image into the file
