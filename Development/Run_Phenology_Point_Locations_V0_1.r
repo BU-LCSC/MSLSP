@@ -22,7 +22,7 @@ library(rjson)
 ############
 
 #Tile 
-tile <- '18TYN'
+tile <- '16SEJ'
 codeVersion <- 'V0'      #run V0 or V1?
 
 numCores <- 8
@@ -31,8 +31,8 @@ imgYrs <- 2016:2018
 phenYrs <- 2016:2018
 
 #What data folder
-# chunkBase <- '/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/'
-chunkBase <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t2/'
+chunkBase <- '/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/'
+# chunkBase <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t2/'
 imgBase <-   '/projectnb/modislc/projects/landsat_sentinel/v1_4/HLS30/'
 
 
@@ -48,8 +48,8 @@ functions_diagnostics <- "/usr3/graduate/mkmoon/GitHub/MSLSP/Development/MSLSP_D
 
 #Name of shapefile. Must be in same projection as the tile. Must have "id" column
 # shpName <- paste0('/projectnb/modislc/projects/landsat_sentinel/MSLSP_assessment/shps/',tile,'_pts.shp')
-# shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/',tile,'_pts_1.shp')
-shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/rp_mf_1000.shp')
+shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/fromJ/',tile,'_pts.shp')
+# shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/rp_mf_1000.shp')
 
 #Json file where phenology parameters are defined. Will just use the phenology paramaters from this 
 jsonFile <- "/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
@@ -110,14 +110,14 @@ imgYrs <- 2016:2018
 phenYrs <- 2016:2018
 
 #What data folder
-# chunkBase <- '/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/'
-chunkBase <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t2/'
+chunkBase <- '/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/'
+# chunkBase <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t2/'
 imgBase <-   '/projectnb/modislc/projects/landsat_sentinel/v1_4/HLS30/'
 
 
 #Define and create output directory
 # outFolder <- '/projectnb/modislc/projects/landsat_sentinel/MSLSP_assessment/plots/'
-outFolder <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/figures/t2_ts/'
+outFolder <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/figures/forJ/'
 
 
 #Define path to function
@@ -127,8 +127,8 @@ functions_diagnostics <- "/usr3/graduate/mkmoon/GitHub/MSLSP/Development/MSLSP_D
 
 #Name of shapefile. Must be in same projection as the tile. Must have "id" column
 # shpName <- paste0('/projectnb/modislc/projects/landsat_sentinel/MSLSP_assessment/shps/',tile,'_pts.shp')
-# shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/',tile,'_pts_1.shp')
-shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/rp_mf_1000.shp')
+shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/fromJ/',tile,'_pts.shp')
+# shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/rp_mf_1000.shp')
 
 #Json file where phenology parameters are defined. Will just use the phenology paramaters from this 
 jsonFile <- "/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
