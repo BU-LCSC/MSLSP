@@ -2,10 +2,10 @@
   "setup":{
     
     "imgStartYr":2016,
-    "imgEndYr":2018,
+    "imgEndYr":2019,
     
     "phenStartYr":2016,
-    "phenEndYr":2018,
+    "phenEndYr":2019,
     
     "downloadImagery":true,
     "preprocessImagery":true,
@@ -25,7 +25,7 @@
 	  "logDir":"/home/ec2-user/",
     "rScript":"/shared/code/MSLSP/MSLSP_Script.r",
     "rFunctions":"/shared/code/MSLSP/MSLSP_Functions.r",
-    "productTable":"/shared/code/MSLSP/MSLSP_Layers.csv",
+    "productTable":"/shared/code/MSLSP/MSLSP_Layers_v1.csv",
     "fmaskFunction":"/shared/code/fmask_compiled/autoFmask_HLS_No_HDF",
 	  "envVariables":"/shared/code/MSLSP/env_variables_aws.sh",
 	  "s3Dir":"s3://mslsp/v1.0/",
@@ -44,7 +44,7 @@
     "dataDir":"/projectnb/modislc/projects/landsat_sentinel/v1_4/",
     "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
-    "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
+    "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers_v1.csv",
     "fmaskFunction":"/usr2/postdoc/dbolt/CodeFolder/others_code/Fmask_4_0_matlab/fmask_compiled/autoFmask_HLS",
     
 
@@ -74,7 +74,7 @@
     
     "dormantQuantile":0.05,  
     "dormStart":"2016-01-01",
-    "dormEnd":"2018-12-31",
+    "dormEnd":"2019-12-31",
    
     "spikeThresh":2,            
     "minResid":0.1,              
