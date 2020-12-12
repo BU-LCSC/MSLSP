@@ -1014,7 +1014,7 @@ GetSegs <- function(peaks, x, pars, peak=NA){
   #   peak_thresh <- 0
   # }
   
-  # we could have any combinaton of rel_amp_frac, rel_peak_frac, and min_seg_amplitude specified
+  # we could have any combination of rel_amp_frac, rel_peak_frac, and min_seg_amplitude specified
   # initialize seg_thresh and peak_thresh to zero
   # determine the "global max/min", if peak_frac is specified, set it, if amp_frac is specified, set it
   # if min_seg_amplitude is set, choose the max of that and amp_frac
