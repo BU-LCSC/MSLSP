@@ -998,7 +998,7 @@ GetSegs <- function(peaks, x, pars, peak=NA){
   tmp_peaks <- peaks[order(x[peaks])] # so we only have to sort once if they're in the wrong order
   if(!identical(tmp_peaks, peaks)) peaks <- tmp_peaks
   
-  # if no peak is specified, we start at the beginnning
+  # if no peak is specified, we start at the beginning
   if(is.na(peak)) peak <- peaks[1]
   
   # get the next largest peak; will be NA if this peak is the highest (last one to do)
