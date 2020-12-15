@@ -998,7 +998,7 @@ GetSegs <- function(peaks, x, pars, peak=NA){
   tmp_peaks <- peaks[order(x[peaks])] # so we only have to sort once if they're in the wrong order
   if(!identical(tmp_peaks, peaks)) peaks <- tmp_peaks
   
-  # if no peak is specified, we start at the beginnning
+  # if no peak is specified, we start at the beginning
   if(is.na(peak)) peak <- peaks[1]
   
   # get the next largest peak; will be NA if this peak is the highest (last one to do)
@@ -1014,7 +1014,7 @@ GetSegs <- function(peaks, x, pars, peak=NA){
   #   peak_thresh <- 0
   # }
   
-  # we could have any combinaton of rel_amp_frac, rel_peak_frac, and min_seg_amplitude specified
+  # we could have any combination of rel_amp_frac, rel_peak_frac, and min_seg_amplitude specified
   # initialize seg_thresh and peak_thresh to zero
   # determine the "global max/min", if peak_frac is specified, set it, if amp_frac is specified, set it
   # if min_seg_amplitude is set, choose the max of that and amp_frac
@@ -1151,7 +1151,7 @@ GetSegThresh <- function(seg, x, thresh, gup=T){
     # check for valid greendown segment
     if(!is.na(seg[2]) & !is.na(seg[3])){
       gdown_thresh <- x[seg[3]] + ((x[seg[2]] - x[seg[3]]) * thresh)
-      gdown_thresh_index <- GetThresh(gdown_thresh, x[seg[2]:seg[3]], first_greater=T, gup=F)
+      gdown_thresh_index <- GetThresh(gdown_thresh, x[seg[2]:seg[3]], first_greater=F, gup=F)
       return(gdown_thresh_index + seg[2] - 1)
     }else{
       return(NA)
