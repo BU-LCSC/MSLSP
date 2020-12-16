@@ -45,7 +45,7 @@
     "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
     "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers_v1.csv",
-    "fmaskFunction":"/usr2/postdoc/dbolt/CodeFolder/others_code/Fmask_4_0_matlab/fmask_compiled/autoFmask_HLS",
+    "fmaskFunction":"/projectnb/modislc/projects/landsat_sentinel/fmask_compiled/autoFmask_HLS",
     
 
     "numCores":28,
