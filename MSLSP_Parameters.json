@@ -25,7 +25,7 @@
 	  "logDir":"/home/ec2-user/",
     "rScript":"/shared/code/MSLSP/MSLSP_Script.r",
     "rFunctions":"/shared/code/MSLSP/MSLSP_Functions.r",
-    "productTable":"/shared/code/MSLSP/MSLSP_Layers_v1.csv",
+    "productTable":"/shared/code/MSLSP/MSLSP_Layers.csv",
     "fmaskFunction":"/shared/code/fmask_compiled/autoFmask_HLS_No_HDF",
 	  "envVariables":"/shared/code/MSLSP/env_variables_aws.sh",
 	  "s3Dir":"s3://mslsp/v1.0/",
