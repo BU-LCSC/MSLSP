@@ -44,7 +44,7 @@
     "dataDir":"/projectnb/modislc/projects/landsat_sentinel/v1_4/",
     "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
-    "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers_v1.csv",
+    "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
     "fmaskFunction":"/projectnb/modislc/projects/landsat_sentinel/fmask_compiled/autoFmask_HLS",
     
 
