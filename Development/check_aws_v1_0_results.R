@@ -20,19 +20,21 @@ path <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t6'
 # tiles <- substr(list.dirs(path=path,full.names=T)[2:25],53,57)
 tiles <- substr(list.dirs(path=path,full.names=T)[2:4],56,60)
 
-year <- 2016:2018
+year <- 2016:2019
 
 spec <- viridis(11)
 mycolRamp = colorRampPalette(c('White',spec))
 
-for(yy in 1:3){
+for(yy in 1:length(year)){
   ##
   # pathSCC <- paste0('/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/',tiles[tt],'/phenoMetrics')
   pathSCC <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/V0_11/',tiles[tt])             # V0 code with SplinePar 0.55
-  pathAWS <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t6/',tiles[tt])  # V1 code with SplinePar 0.55
+  # pathAWS <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t6/',tiles[tt])  # V1 code with SplinePar 0.55
   pathAWS1 <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t2/',tiles[tt]) # V1 code with SplinePar 0.4
   pathAWS2 <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t5/',tiles[tt]) # Same code with t2
+  pathAWS <- paste0('/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/',tiles[tt],'/phenoMetrics') # Same code with t2
   
+    
   #
   sstr <- paste0('*',tiles[tt],'*',year[yy],'.nc')
   
@@ -44,7 +46,7 @@ for(yy in 1:3){
   nc <- nc_open(fileSCC)
   var <- names(nc[['var']])
   
-  setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/figures/v0_v1_t6_1/')
+  setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/figures/v0_v1_t7/')
   for(pp in 3:11){
     rastSCC <- raster(fileSCC,varname=var[pp])
     rastAWS <- raster(fileAWS,varname=var[pp])  
