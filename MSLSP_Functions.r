@@ -1151,7 +1151,7 @@ GetSegThresh <- function(seg, x, thresh, gup=T){
     # check for valid greendown segment
     if(!is.na(seg[2]) & !is.na(seg[3])){
       gdown_thresh <- x[seg[3]] + ((x[seg[2]] - x[seg[3]]) * thresh)
-      gdown_thresh_index <- GetThresh(gdown_thresh, x[seg[2]:seg[3]], first_greater=T, gup=F)
+      gdown_thresh_index <- GetThresh(gdown_thresh, x[seg[2]:seg[3]], first_greater=F, gup=F)
       return(gdown_thresh_index + seg[2] - 1)
     }else{
       return(NA)
