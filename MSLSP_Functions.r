@@ -2017,11 +2017,6 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
 
     if (lyr$units == 'Day of year') {data <- data - startDate}    #If units are Day of year, convert from date to day of year
     
-    if (lyr$short_name == 'overallQA' |lyr$short_name == 'overallQA_2' |lyr$short_name == 'gupQA' |lyr$short_name == 'gdownQA' |lyr$short_name == 'gupQA_2' |lyr$short_name == 'gdownQA_2'){
-      data[ngEVI == 1] <- 6 #Give 6 (i.e., "No cycle detected") for the pixels having bad EVI values 
-    }else{
-      data[ngEVI == 1] <- NA #Give NA for the pixels having bad EVI values 
-    }
     
     if (lyr$short_name == 'overallQA' |lyr$short_name == 'overallQA_2' |lyr$short_name == 'gupQA' |lyr$short_name == 'gdownQA' |lyr$short_name == 'gupQA_2' |lyr$short_name == 'gdownQA_2'){
       data[ngEVI == 1] <- 6 #Give 6 (i.e., "No cycle detected") for the pixels having bad EVI values 
