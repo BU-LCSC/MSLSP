@@ -9,7 +9,7 @@ calc_lyr,product_lyr,qa_lyr,short_name,long_name,units,scale,offset,data_type,va
 8,8,,OGMn,Onset Greenness Minimum (Date of 85% greenness decrease) ,Day of year,1,0,Int16,-181,548,32767,Onset Greenness Minimum (Date of 85% greenness decrease) 
 9,9,,EVImax,Maximum EVI2 during vegetation cycle,-,0.0001,0,Int16,0,10000,32767,Maximum EVI2 during vegetation cycle
 10,10,,EVIamp,EVI2 Amplitude during vegetation cycle ,-,0.0001,0,Int16,0,10000,32767,EVI2 Amplitude during vegetation cycle 
-11,11,,EVIarea,Integrated EVI2 during vegetation cycle ,-,0.01,0,Int16,32766,10000,32767,Integrated EVI2 during vegetation cycle 
+11,11,,EVIarea,Integrated EVI2 during vegetation cycle ,-,0.01,0,Int16,0,32766,32767,Integrated EVI2 during vegetation cycle 
 12,,,OGI_b2,OLI band 2 Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 15% greenness increase (OLI band 2, MSI band 2)"
 13,,,OGI_b3,OLI band 3  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 15% greenness increase (OLI band 3, MSI band 3)"
 14,,,OGI_b4,OLI band 4  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 15% greenness increase (OLI band 4, MSI band 4)"
