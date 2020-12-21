@@ -17,6 +17,40 @@ years <- 2016:2019
 
 ###############################################
 # All layers as raster
+files <- list.files(path=paste(path,'/',tt,sep=''),pattern=glob2rx('*.nc'),full.names=T)
+erepa <- shapefile('/projectnb/modislc/users/mkmoon/NEphenology/ecoregions/na_cec_eco_l1/NA_CEC_Eco_Level1.shp')
+
+for(i in 1:length(years)){
+  nc <- nc_open(files[i])
+  var <- names(nc[['var']])
+  
+  options(warn=-1)
+  
+  setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/product_qc/raster/')
+  png(filename=paste(tt,'_',years[i],'.png',sep=''),width=16,height=8,units='in',res=150)
+  par(mfrow=c(4,7),oma=c(0,0,0,2),mar=c(0,1,2,4))
+  
+  for(j in 2:26){
+    rast <- raster(files[i],varname=var[j])
+    nv <- sum(!is.na(values(rast)))
+    plot(rast,axes=F,box=F,
+         main=paste(years[i],'_',var[j],'_',nv,sep=''),
+         colNA='grey45',cex.main=1.2)
+    print(paste(i,';',j))
+  }
+  
+  pr3 <- projectExtent(rast,crs(erepa))
+  temp <- crop(erepa,pr3)
+  
+  plot(erepa,col='grey90',border='grey90')
+  plot(temp,add=T,col='red',border='red')
+  
+  dev.off()
+}
+
+
+###############################################
+# Comparison with V0
 spec <- viridis(11)
 mycolRamp = colorRampPalette(c('White',spec))
 
@@ -156,35 +190,3 @@ for(yy in 1){
 
 
 
-###############################################
-# Comparison with V0
-files <- list.files(path=paste(path,'/',tt,sep=''),pattern=glob2rx('*.nc'),full.names=T)
-erepa <- shapefile('/projectnb/modislc/users/mkmoon/NEphenology/ecoregions/na_cec_eco_l1/NA_CEC_Eco_Level1.shp')
-
-for(i in 1:length(years)){
-  nc <- nc_open(files[i])
-  var <- names(nc[['var']])
-  
-  options(warn=-1)
-  
-  setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/product_qc/raster/')
-  png(filename=paste(tt,'_',years[i],'.png',sep=''),width=16,height=8,units='in',res=150)
-  par(mfrow=c(4,7),oma=c(0,0,0,2),mar=c(0,1,2,4))
-  
-  for(j in 2:26){
-    rast <- raster(files[i],varname=var[j])
-    nv <- sum(!is.na(values(rast)))
-    plot(rast,axes=F,box=F,
-         main=paste(years[i],'_',var[j],'_',nv,sep=''),
-         colNA='grey45',cex.main=1.2)
-    print(paste(i,';',j))
-  }
-  
-  pr3 <- projectExtent(rast,crs(erepa))
-  temp <- crop(erepa,pr3)
-  
-  plot(erepa,col='grey90',border='grey90')
-  plot(temp,add=T,col='red',border='red')
-  
-  dev.off()
-}
