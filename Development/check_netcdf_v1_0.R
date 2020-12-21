@@ -5,37 +5,32 @@ library(ncdf4)
 args <- commandArgs()
 print(args)
 
-tt <- as.numeric(args[3])
+tt <- args[3]
+# tt <- '18TXS'
 
-# tt <- 1
-years <- 2016:2018
+path <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/product'
+files <- list.files(path=paste(path,'/',tt,sep=''),pattern=glob2rx('*.nc'),full.names=T)
 
-path <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/t4'
-tiles <- substr(list.dirs(path=path,full.names=T)[2:4],56,60)
-files <- list.files(path=paste(path,'/',tiles[tt],sep=''),pattern=glob2rx('*.nc'),full.names=T)
-
-setwd('/projectnb/modislc/users/mkmoon/NEphenology/data/bay/figure/')
+years <- 2016:2019
 erepa <- shapefile('/projectnb/modislc/users/mkmoon/NEphenology/ecoregions/na_cec_eco_l1/NA_CEC_Eco_Level1.shp')
 
-for(ff in 1:3){
-  nc <- nc_open(files[ff*2])
+for(i in 1:length(years)){
+  nc <- nc_open(files[i])
   var <- names(nc[['var']])
   
   options(warn=-1)
   
-  setwd(paste('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/rasters/t6/',years[ff],sep=''))
-  # pdf(file=paste(tiles[tt],'_',years[ff],'.pdf',sep=''),width=15,height=8)
-  png(filename=paste(tiles[tt],'_',years[ff],'.png',sep=''),width=15,height=8,units='in',res=150)
-  par(mfrow=c(4,6),oma=c(0,0,0,2),mar=c(0,1,2,4))
-  # for(vv in c(2:5,7:12,55:59,61:66,109:110)){
-  for(vv in 2:24){
-    rast <- brick(files[ff*2],varname=var[vv])
-    temp <- raster(files[ff*2],varname=var[vv])
-    nv <- sum(!is.na(values(temp)))
+  setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/product_qc/raster/')
+  png(filename=paste(tt,'_',years[i],'.png',sep=''),width=16,height=8,units='in',res=150)
+  par(mfrow=c(4,7),oma=c(0,0,0,2),mar=c(0,1,2,4))
+  
+  for(j in 2:26){
+    rast <- raster(files[i],varname=var[j])
+    nv <- sum(!is.na(values(rast)))
     plot(rast,axes=F,box=F,
-         main=paste(years[ff],'_',var[vv],'_',nv,sep=''),
+         main=paste(years[i],'_',var[j],'_',nv,sep=''),
          colNA='grey45',cex.main=1.2)
-    print(vv)
+    print(paste(i,';',j))
   }
   
   pr3 <- projectExtent(rast,crs(erepa))
