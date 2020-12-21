@@ -13,7 +13,9 @@ print(args)
 
 tt <- args[3]
 # tt <- '18TYL'
+
 years <- 2016:2019
+path <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/product'
 
 ###############################################
 # All layers as raster
@@ -54,10 +56,10 @@ for(i in 1:length(years)){
 spec <- viridis(11)
 mycolRamp = colorRampPalette(c('White',spec))
 
-for(yy in 1){
+for(yy in 3){
   
   pathSCC <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/V0_11/',tt)             # V0 code with SplinePar 0.55
-  pathAWS <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/product/',tt)  # 'master' as of 12/19/20
+  pathAWS <- paste0(path,'/',tt)  # 'master' as of 12/19/20
   
   sstr <- paste0('*',tt,'*',years[yy],'.nc')
   fileSCC <- list.files(pathSCC,pattern=glob2rx(sstr),recursive=F,full.names=T)
@@ -189,4 +191,59 @@ for(yy in 1){
 }
 
 
+
+###############################################
+# instance info stat
+tiles <- c('18TXS','18TXT','18TYL','18TYM','18TYN','18TYP','18TYQ','18TYR','18TYS','18TYT') # 12/20/2020
+
+smat <- matrix(NA,length(tiles),12)
+for(i in 1:length(tiles)){
+  try({
+    sstr <- paste(tiles[i],'_ins*.txt',sep='')
+    file0 <- list.files('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/product_qc/v0_loginfo',pattern=glob2rx(sstr),full.names=T)
+    file1 <- list.files('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/product',pattern=glob2rx(sstr),full.names=T,recursive=T)
+    if(length(file1)>1){
+      file1 <- file1[length(file1)]
+    }
+    
+    s1 <- read.table(file0,skip=5,sep=':')
+    s2 <- read.table(file1,skip=9,sep=':')
+    
+    smat[i,1] <- sum(s1[1:10,2])
+    smat[i,2] <- sum(s1[11,2])
+    smat[i,3] <- sum(s1[12,2]) 
+    smat[i,4] <- sum(s1[13,2]) 
+    smat[i,5] <- sum(s2[1:12,2])
+    smat[i,6] <- sum(s2[13,2])
+    smat[i,7] <- sum(s2[14,2]) 
+    smat[i,8] <- sum(s2[15,2])     
+    
+    smat[i,9]  <- (smat[i,5]-smat[i,1])/smat[i,1]*100
+    smat[i,10] <- (smat[i,6]-smat[i,2])/smat[i,2]*100
+    smat[i,11] <- (smat[i,7]-smat[i,3])/smat[i,3]*100
+    smat[i,12] <- (smat[i,8]-smat[i,4])/smat[i,4]*100
+    
+  },silent=T)
+}
+row.names(smat) <- tiles
+colnames(smat) <- c('V0_#img','V0_step1','V0_step2','V0_total',
+                    'V1_#img','V1_step1','V1_step2','V1_total',
+                    '%_#img','%_step1','%_step2','%_total')
+
+
+setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/product_qc/')
+png(filename=paste('instanceinfo.png',sep=''),
+    width=7.5,height=6,res=300,units='in')
+# 
+par(oma=c(1,1,1,1),mar=c(4,4,1,1),mgp=c(2.5,1,0))
+plot(smat[,9],smat[,10],xlim=c(0,100),ylim=c(0,100),pch=19,cex=1.5,
+     xlab='Increase in # of Images (%)',ylab='Increase in process time (%)',
+     cex.lab=1.5,cex.axis=1.5)
+points(smat[,9],smat[,11],pch=19,col='blue',cex=1.5)
+points(smat[,9],smat[,12],pch=19,col='red',cex=1.5)
+abline(0,1)
+legend('topleft',c('Step1 (image)','Step2 (metrics)','Total'),pch=19,
+       col=c('black','blue','red'),bty='n',pt.cex=1.5,cex=1.7)
+
+dev.off()
 
