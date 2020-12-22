@@ -12,18 +12,21 @@ args <- commandArgs()
 print(args)
 
 tt <- args[3]
-# tt <- '18TYL'
+# tt <- '13SBA'
 
 years <- 2016:2019
 path <- '/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/product'
 
 ###############################################
 # All layers as raster
-files <- list.files(path=paste(path,'/',tt,sep=''),pattern=glob2rx('*.nc'),full.names=T)
 erepa <- shapefile('/projectnb/modislc/users/mkmoon/NEphenology/ecoregions/na_cec_eco_l1/NA_CEC_Eco_Level1.shp')
 
 for(i in 1:length(years)){
-  nc <- nc_open(files[i])
+  
+  sstr <- paste('*',tt,'_',years[i],'.nc',sep='')
+  file <- list.files(path=paste(path,'/',tt,sep=''),pattern=glob2rx(sstr),full.names=T)
+  
+  nc <- nc_open(file)
   var <- names(nc[['var']])
   
   options(warn=-1)
@@ -33,7 +36,7 @@ for(i in 1:length(years)){
   par(mfrow=c(4,7),oma=c(0,0,0,2),mar=c(0,1,2,4))
   
   for(j in 2:26){
-    rast <- raster(files[i],varname=var[j])
+    rast <- raster(file,varname=var[j])
     nv <- sum(!is.na(values(rast)))
     plot(rast,axes=F,box=F,
          main=paste(years[i],'_',var[j],'_',nv,sep=''),
@@ -192,58 +195,73 @@ for(yy in 3){
 
 
 
-###############################################
-# instance info stat
-tiles <- c('18TXS','18TXT','18TYL','18TYM','18TYN','18TYP','18TYQ','18TYR','18TYS','18TYT') # 12/20/2020
-
-smat <- matrix(NA,length(tiles),12)
-for(i in 1:length(tiles)){
-  try({
-    sstr <- paste(tiles[i],'_ins*.txt',sep='')
-    file0 <- list.files('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/product_qc/v0_loginfo',pattern=glob2rx(sstr),full.names=T)
-    file1 <- list.files('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/product',pattern=glob2rx(sstr),full.names=T,recursive=T)
-    if(length(file1)>1){
-      file1 <- file1[length(file1)]
-    }
-    
-    s1 <- read.table(file0,skip=5,sep=':')
-    s2 <- read.table(file1,skip=9,sep=':')
-    
-    smat[i,1] <- sum(s1[1:10,2])
-    smat[i,2] <- sum(s1[11,2])
-    smat[i,3] <- sum(s1[12,2]) 
-    smat[i,4] <- sum(s1[13,2]) 
-    smat[i,5] <- sum(s2[1:12,2])
-    smat[i,6] <- sum(s2[13,2])
-    smat[i,7] <- sum(s2[14,2]) 
-    smat[i,8] <- sum(s2[15,2])     
-    
-    smat[i,9]  <- (smat[i,5]-smat[i,1])/smat[i,1]*100
-    smat[i,10] <- (smat[i,6]-smat[i,2])/smat[i,2]*100
-    smat[i,11] <- (smat[i,7]-smat[i,3])/smat[i,3]*100
-    smat[i,12] <- (smat[i,8]-smat[i,4])/smat[i,4]*100
-    
-  },silent=T)
-}
-row.names(smat) <- tiles
-colnames(smat) <- c('V0_#img','V0_step1','V0_step2','V0_total',
-                    'V1_#img','V1_step1','V1_step2','V1_total',
-                    '%_#img','%_step1','%_step2','%_total')
-
-
-setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/product_qc/')
-png(filename=paste('instanceinfo.png',sep=''),
-    width=7.5,height=6,res=300,units='in')
+# ###############################################
+# # instance info stat
+# tiles <- c('18TXS','18TXT','18TYL','18TYM','18TYN','18TYP','18TYQ','18TYR','18TYS','18TYT',
+#            '13SBA','13SBB','13SBC','13SBD','13SBR','13SBS','13SBT','13SBU','13SBV','13SCA',
+#            '15TTE','15TTF','15TTG','15TUE','15TUF') 
 # 
-par(oma=c(1,1,1,1),mar=c(4,4,1,1),mgp=c(2.5,1,0))
-plot(smat[,9],smat[,10],xlim=c(0,100),ylim=c(0,100),pch=19,cex=1.5,
-     xlab='Increase in # of Images (%)',ylab='Increase in process time (%)',
-     cex.lab=1.5,cex.axis=1.5)
-points(smat[,9],smat[,11],pch=19,col='blue',cex=1.5)
-points(smat[,9],smat[,12],pch=19,col='red',cex=1.5)
-abline(0,1)
-legend('topleft',c('Step1 (image)','Step2 (metrics)','Total'),pch=19,
-       col=c('black','blue','red'),bty='n',pt.cex=1.5,cex=1.7)
-
-dev.off()
+# 
+# smat <- matrix(NA,length(tiles),12)
+# for(i in 1:length(tiles)){
+#   try({
+#     sstr <- paste(tiles[i],'_ins*.txt',sep='')
+#     file0 <- list.files('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/product_qc/v0_loginfo',pattern=glob2rx(sstr),full.names=T)
+#     file1 <- list.files('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/From_AWS/product',pattern=glob2rx(sstr),full.names=T,recursive=T)
+#     if(length(file1)>1){
+#       file1 <- file1[length(file1)]
+#     }
+#     
+#     s1 <- read.table(file0,skip=5,sep=':')
+#     s2 <- read.table(file1,skip=9,sep=':')
+#     
+#     smat[i,1] <- sum(s1[1:10,2])
+#     smat[i,2] <- sum(s1[11,2])
+#     smat[i,3] <- sum(s1[12,2]) 
+#     smat[i,4] <- sum(s1[13,2]) 
+#     smat[i,5] <- sum(s2[1:12,2])
+#     smat[i,6] <- sum(s2[13,2])
+#     smat[i,7] <- sum(s2[14,2]) 
+#     smat[i,8] <- sum(s2[15,2])     
+#     
+#     smat[i,9]  <- (smat[i,5]-smat[i,1])/smat[i,1]*100
+#     smat[i,10] <- (smat[i,6]-smat[i,2])/smat[i,2]*100
+#     smat[i,11] <- (smat[i,7]-smat[i,3])/smat[i,3]*100
+#     smat[i,12] <- (smat[i,8]-smat[i,4])/smat[i,4]*100
+#     
+#   },silent=T)
+# }
+# row.names(smat) <- tiles
+# colnames(smat) <- c('V0_#img','V0_step1','V0_step2','V0_total',
+#                     'V1_#img','V1_step1','V1_step2','V1_total',
+#                     '%_#img','%_step1','%_step2','%_total')
+# 
+# 
+# setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/product_qc/')
+# png(filename=paste('instanceinfo.png',sep=''),
+#     width=7.5,height=6,res=300,units='in')
+# # 
+# par(oma=c(1,1,1,1),mar=c(4,4,1,1),mgp=c(2.5,1,0))
+# plot(smat[1,9],smat[1,10],xlim=c(-80,130),ylim=c(-80,130),pch=19,cex=1.5,
+#      xlab='Increase in # of Images (%)',ylab='Increase in process time (%)',
+#      cex.lab=1.8,cex.axis=1.5)
+# for(i in 2:dim(smat)[1]){
+#   if(i<21){
+#     points(smat[i,9],smat[i,10],pch=19,cex=1.5)
+#     points(smat[i,9],smat[i,11],pch=19,col='blue',cex=1.5)
+#     points(smat[i,9],smat[i,12],pch=19,col='red',cex=1.5)
+#   }else{
+#     points(smat[i,9],smat[i,10],pch=2,cex=1.8,lwd=1.5)
+#     points(smat[i,9],smat[i,11],pch=2,col='blue',cex=1.8,lwd=1.5)
+#     points(smat[i,9],smat[i,12],pch=2,col='red',cex=1.8,lwd=1.5)
+#   }
+# }
+# abline(0,1);abline(h=0,lty=5);abline(v=0,lty=5)
+# legend('topleft',c('Step1; all','Step2; all','Total; all',
+#                    'Step1; No comp.','Step2; No comp.','Total; No comp.'),
+#        pch=c(19,19,19,2,2,2),pt.lwd=c(NA,NA,NA,1.5,1.5,1.5),
+#        col=c('black','blue','red','black','blue','red'),bty='n',
+#        pt.cex=c(1.5,1.5,1.5,1.8,1.8,1.8),cex=1.5)
+# 
+# dev.off()
 
