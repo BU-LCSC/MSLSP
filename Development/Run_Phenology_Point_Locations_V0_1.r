@@ -22,7 +22,7 @@ library(rjson)
 ############
 
 #Tile 
-tile <- '13TEF'
+tile <- '18TYN'
 codeVersion <- 'V0'      #run V0 or V1?
 
 numCores <- 8
@@ -49,7 +49,7 @@ functions_diagnostics <- "/usr3/graduate/mkmoon/GitHub/MSLSP/Development/MSLSP_D
 #Name of shapefile. Must be in same projection as the tile. Must have "id" column
 # shpName <- paste0('/projectnb/modislc/projects/landsat_sentinel/MSLSP_assessment/shps/',tile,'_pts.shp')
 # shpName <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/geo_data/shp/',tile,'_pts_edge.shp')
-shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/rp_gr_1000.shp')
+shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/rp_mf_1000.shp')
 
 #Json file where phenology parameters are defined. Will just use the phenology paramaters from this 
 jsonFile <- "/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
@@ -129,7 +129,7 @@ functions_diagnostics <- "/usr3/graduate/mkmoon/GitHub/MSLSP/Development/MSLSP_D
 #Name of shapefile. Must be in same projection as the tile. Must have "id" column
 # shpName <- paste0('/projectnb/modislc/projects/landsat_sentinel/MSLSP_assessment/shps/',tile,'_pts.shp')
 # shpName <- paste0('/projectnb/modislc/users/mkmoon/MuSLI/geo_data/shp/',tile,'_pts_edge.shp')
-shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/rp_gr_1000.shp')
+shpName <- paste0('/projectnb/modislc/users/mkmoon/Planet/shp/rp_mf_1000.shp')
 
 #Json file where phenology parameters are defined. Will just use the phenology paramaters from this
 jsonFile <- "/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
