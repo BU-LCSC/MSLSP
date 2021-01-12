@@ -199,7 +199,8 @@ for(yy in 3){
 # # instance info stat
 # tiles <- c('18TXS','18TXT','18TYL','18TYM','18TYN','18TYP','18TYQ','18TYR','18TYS','18TYT',
 #            '13SBA','13SBB','13SBC','13SBD','13SBR','13SBS','13SBT','13SBU','13SBV','13SCA',
-#            '15TTE','15TTF','15TTG','15TUE','15TUF') 
+#            '15TTE','15TTF','15TTG','15TUE','15TUF',
+#            '16TBK','16TBL','16TBM','16TCK','16TCL')
 # 
 # 
 # smat <- matrix(NA,length(tiles),12)
@@ -211,24 +212,24 @@ for(yy in 3){
 #     if(length(file1)>1){
 #       file1 <- file1[length(file1)]
 #     }
-#     
+# 
 #     s1 <- read.table(file0,skip=5,sep=':')
 #     s2 <- read.table(file1,skip=9,sep=':')
-#     
+# 
 #     smat[i,1] <- sum(s1[1:10,2])
 #     smat[i,2] <- sum(s1[11,2])
-#     smat[i,3] <- sum(s1[12,2]) 
-#     smat[i,4] <- sum(s1[13,2]) 
+#     smat[i,3] <- sum(s1[12,2])
+#     smat[i,4] <- sum(s1[13,2])
 #     smat[i,5] <- sum(s2[1:12,2])
 #     smat[i,6] <- sum(s2[13,2])
-#     smat[i,7] <- sum(s2[14,2]) 
-#     smat[i,8] <- sum(s2[15,2])     
-#     
+#     smat[i,7] <- sum(s2[14,2])
+#     smat[i,8] <- sum(s2[15,2])
+# 
 #     smat[i,9]  <- (smat[i,5]-smat[i,1])/smat[i,1]*100
 #     smat[i,10] <- (smat[i,6]-smat[i,2])/smat[i,2]*100
 #     smat[i,11] <- (smat[i,7]-smat[i,3])/smat[i,3]*100
 #     smat[i,12] <- (smat[i,8]-smat[i,4])/smat[i,4]*100
-#     
+# 
 #   },silent=T)
 # }
 # row.names(smat) <- tiles
@@ -240,7 +241,7 @@ for(yy in 3){
 # setwd('/projectnb/modislc/users/mkmoon/MuSLI/V1_0/product_qc/')
 # png(filename=paste('instanceinfo.png',sep=''),
 #     width=7.5,height=6,res=300,units='in')
-# # 
+# #
 # par(oma=c(1,1,1,1),mar=c(4,4,1,1),mgp=c(2.5,1,0))
 # plot(smat[1,9],smat[1,10],xlim=c(-80,130),ylim=c(-80,130),pch=19,cex=1.5,
 #      xlab='Increase in # of Images (%)',ylab='Increase in process time (%)',
@@ -250,10 +251,14 @@ for(yy in 3){
 #     points(smat[i,9],smat[i,10],pch=19,cex=1.5)
 #     points(smat[i,9],smat[i,11],pch=19,col='blue',cex=1.5)
 #     points(smat[i,9],smat[i,12],pch=19,col='red',cex=1.5)
-#   }else{
+#   }else if(i>20 & i<26){
 #     points(smat[i,9],smat[i,10],pch=2,cex=1.8,lwd=1.5)
 #     points(smat[i,9],smat[i,11],pch=2,col='blue',cex=1.8,lwd=1.5)
 #     points(smat[i,9],smat[i,12],pch=2,col='red',cex=1.8,lwd=1.5)
+#   }else{
+#     points(smat[i,9],smat[i,10],pch=3,cex=1.8,lwd=1.5)
+#     points(smat[i,9],smat[i,11],pch=3,col='blue',cex=1.8,lwd=1.5)
+#     points(smat[i,9],smat[i,12],pch=3,col='red',cex=1.8,lwd=1.5)
 #   }
 # }
 # abline(0,1);abline(h=0,lty=5);abline(v=0,lty=5)
