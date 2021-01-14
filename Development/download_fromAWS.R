@@ -6,6 +6,7 @@ tiles <- c('18TXS','18TXT','18TYL','18TYM','18TYN','18TYP','18TYQ','18TYR','18TY
 tiles <- c('13SBA','13SBB','13SBC','13SBD','13SBR','13SBS','13SBT','13SBU','13SBV','13SCA', # 12/21/2020
            '15TTE','15TTF','15TTG','15TUE','15TUF') 
 tiles <- c('16TBK','16TBL','16TBM','16TCK','16TCL') # 1/12/2021
+tiles <- c('17TKE','17TKF','17TKG','17TLE','17TLF') # 1/13/2021
             
 
 
