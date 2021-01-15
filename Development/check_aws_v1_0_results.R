@@ -200,7 +200,8 @@ for(yy in 3){
 # tiles <- c('18TXS','18TXT','18TYL','18TYM','18TYN','18TYP','18TYQ','18TYR','18TYS','18TYT',
 #            '13SBA','13SBB','13SBC','13SBD','13SBR','13SBS','13SBT','13SBU','13SBV','13SCA',
 #            '15TTE','15TTF','15TTG','15TUE','15TUF',
-#            '16TBK','16TBL','16TBM','16TCK','16TCL')
+#            '16TBK','16TBL','16TBM','16TCK','16TCL',
+#            '12SVA','12SVB','12SVC','12SVD','12SVE')
 # 
 # 
 # smat <- matrix(NA,length(tiles),12)
