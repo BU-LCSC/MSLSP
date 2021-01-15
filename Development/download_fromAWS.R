@@ -7,6 +7,7 @@ tiles <- c('13SBA','13SBB','13SBC','13SBD','13SBR','13SBS','13SBT','13SBU','13SB
            '15TTE','15TTF','15TTG','15TUE','15TUF') 
 tiles <- c('16TBK','16TBL','16TBM','16TCK','16TCL') # 1/12/2021
 tiles <- c('17TKE','17TKF','17TKG','17TLE','17TLF') # 1/13/2021
+tiles <- c('12SVA','12SVB','12SVC','12SVD','12SVE') # 1/14/2021
             
 
 
