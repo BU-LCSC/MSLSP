@@ -654,7 +654,7 @@ topocorr_rotational_by_group <-function(x, groups, slope, aspect, sunzenith, sun
       if (inherits(ilGroup, 'try-error')) {next}    #If pixels can't be grouped, move on
       pixID <- 1:length(ilGroup)
       pixToSample <- matrix(0,length(pixID))
-      set.seed(456789)
+      # set.seed(456789)
       for (i in 1:topo_pars$numILclass) {
         check <- ilGroup == i
         num <- sum(check)
