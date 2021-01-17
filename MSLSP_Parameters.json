@@ -2,10 +2,10 @@
   "setup":{
     
     "imgStartYr":2016,
-    "imgEndYr":2018,
+    "imgEndYr":2019,
     
     "phenStartYr":2016,
-    "phenEndYr":2018,
+    "phenEndYr":2019,
     
     "downloadImagery":true,
     "preprocessImagery":true,
@@ -45,7 +45,7 @@
     "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
     "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
-    "fmaskFunction":"/usr2/postdoc/dbolt/CodeFolder/others_code/Fmask_4_0_matlab/fmask_compiled/autoFmask_HLS",
+    "fmaskFunction":"/projectnb/modislc/projects/landsat_sentinel/fmask_compiled/autoFmask_HLS",
     
 
     "numCores":28,
@@ -60,7 +60,7 @@
     
     "maskNegativeValues":true,
     
-    "doComposites":true,
+    "doComposites":false,
     
     "min_seg_amplitude":0.1,  
     "min_increase_length":30,   
@@ -74,7 +74,7 @@
     
     "dormantQuantile":0.05,  
     "dormStart":"2016-01-01",
-    "dormEnd":"2018-12-31",
+    "dormEnd":"2019-12-31",
    
     "spikeThresh":2,            
     "minResid":0.1,              
@@ -82,7 +82,7 @@
     "maxDespikeIterations":50,   
     
     "splineBuffer":185,               
-    "splineSpar":0.4,   
+    "splineSpar":0.55,   
     
     "gapLengthToFill":20,  
     "maxWeight":0.5,                 
@@ -125,10 +125,10 @@
   "netcdf":{
     "global":{  
       "title":"Multisource Land Surface Phenology (MS-LSP)",
-      "product_version":"v0.1",
+      "product_version":"v002",
       "summary":"A 30m Land Surface Phenology Product for North America derived from Landsat and Sentinel-2 imagery",
       "algorithm theoretical basis document":"LINK NEEDED",
-      "user guide":"LINK NEEDED",
+      "user guide":"https://lpdaac.usgs.gov/documents/652/MSLSP_User_Guide_V1.pdf",
       "software_repository":"git@github.com:BU-LCSC/MuSLI_LSP.git",
       "reference":"Bolton, D.K., Gray, J.M., Melaas, E.K., Moon, M., Eklundh, L, Friedl, M.A., 2020. Continental-Scale Land Surface Phenology from Harmonized Landsat 8 and Sentinel-2 Imagery. Remote Sensing of Environment",
       "program":"The Multi-Source Land Imaging (MuSLI) project funded by NASA's Land Cover Land Use Change (LCLUC) program",
