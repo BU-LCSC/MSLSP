@@ -1020,8 +1020,8 @@ GetSegs <- function(peaks, x, pars, peak=NA){
   # determine the "global max/min", if peak_frac is specified, set it, if amp_frac is specified, set it
   # if min_seg_amplitude is set, choose the max of that and amp_frac
   seg_thresh <- peak_thresh <- 0
-  global_max <- max(x, na.rm=T)
-  global_min <- min(x, na.rm=T)
+  global_max <- max(x[(pars$splineBuffer+1):(pars$splineBuffer+365)], na.rm=T) #find gobal min/max within a target year
+  global_min <- min(x[(pars$splineBuffer+1):(pars$splineBuffer+365)], na.rm=T)
   if(!is.na(pars$rel_amp_frac)) seg_thresh <- (global_max - global_min) * pars$rel_amp_frac
   #if(!is.na(pars$rel_peak_frac)) peak_thresh <- global_max * pars$rel_peak_frac
   if(!is.na(pars$min_seg_amplitude)) seg_thresh <- max(pars$min_seg_amplitude, seg_thresh)
