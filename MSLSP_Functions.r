@@ -1151,7 +1151,7 @@ GetSegThresh <- function(seg, x, thresh, gup=T){
     # check for valid greendown segment
     if(!is.na(seg[2]) & !is.na(seg[3])){
       gdown_thresh <- x[seg[3]] + ((x[seg[2]] - x[seg[3]]) * thresh)
-      gdown_thresh_index <- GetThresh(gdown_thresh, x[seg[2]:seg[3]], first_greater=T, gup=F)
+      gdown_thresh_index <- GetThresh(gdown_thresh, x[seg[2]:seg[3]], first_greater=F, gup=F)
       return(gdown_thresh_index + seg[2] - 1)
     }else{
       return(NA)
@@ -1565,6 +1565,7 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
       
       #Only keep segments with peaks within year *****
       full_segs <- full_segs[inYear[sapply(full_segs, "[[", 2)] ]  #check if peaks are in the year
+      if (length(full_segs)==0) {outAll <- c(outAll,annualMetrics(smoothed_vi,pred_dates,fillMat[,y], baseWeights[,y], yrs[y],pheno_pars));next}  #If no valid peaks within a target year, calc annual metrics, and move to next year
       
       #Get PhenoDates
       pheno_dates <- GetPhenoDates(full_segs, smoothed_vi, pred_dates, pheno_pars)
@@ -1978,6 +1979,29 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
   # Now create the netCDF file with the defined variables
   ncFile <- nc_create(productFile,results,force_v4=T)
   
+  
+  # Assign NA for the EVImax, EVIamp, and EVIare layers where their values exceed 10000, 10000, and 32766, respectively, 
+  # and give 6 (i.e., "No cycles detected") for the pixels in all layers
+  ngEVI <- matrix(0, dim(baseImage)[1], dim(baseImage)[2])           # A layer to screen all pixels having bad EVI values
+  
+  for (i in 1:length(lyrs$short_name)) {
+    lyr <- lyrs[i,]
+    
+    if (lyr$short_name == 'EVImax' | lyr$short_name == 'EVIamp'| lyr$short_name == 'EVImax_2' | lyr$short_name == 'EVIamp_2') {
+      data <- readLyrChunks(lyr$calc_lyr, yr, numChunks, numPix, params$dirs$tempDir)
+      data <- matrix(data, dim(baseImage)[1], dim(baseImage)[2])           #Need to flip image for netcdf. The next lines do this
+      
+      ngEVI[data > 10000] <- 1      #Set as 1 for the pixels where EVImax or EVIamp exceed 10000
+      
+    }else if(lyr$short_name == 'EVIarea' | lyr$short_name == 'EVIarea_2'){
+      data <- readLyrChunks(lyr$calc_lyr, yr, numChunks, numPix, params$dirs$tempDir)
+      data <- matrix(data, dim(baseImage)[1], dim(baseImage)[2])           #Need to flip image for netcdf. The next lines do this
+      
+      ngEVI[data > 32766] <- 1      #Set as 1 for the pixels where EVIare exceed 32766
+    }
+  }
+  
+  
   #Loop through layers again, write the image data to the file
   for (i in 1:length(lyrs$short_name)) {
     lyr <- lyrs[i,]
@@ -1994,6 +2018,15 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
     data <- matrix(data, dim(baseImage)[1], dim(baseImage)[2])           #Need to flip image for netcdf. The next lines do this
 
     if (lyr$units == 'Day of year') {data <- data - startDate}    #If units are Day of year, convert from date to day of year
+    
+    
+    if (lyr$short_name == 'overallQA' |lyr$short_name == 'overallQA_2' |lyr$short_name == 'gupQA' |lyr$short_name == 'gdownQA' |lyr$short_name == 'gupQA_2' |lyr$short_name == 'gdownQA_2'){
+      data[ngEVI == 1] <- 6 #Give 6 (i.e., "No cycle detected") for the pixels having bad EVI values 
+    }else if(lyr$short_name == 'NumCycles'){
+      data[ngEVI == 1] <- 0 #Give 0 (i.e., # of cycles is zero)
+    }else{
+      data[ngEVI == 1] <- 32767  #Give NA for the pixels having bad EVI values 
+    }
     
     
     data[data < -32767 | data > 32767] <- 32767      #Ensure no values are outside the range
