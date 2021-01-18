@@ -654,6 +654,7 @@ topocorr_rotational_by_group <-function(x, groups, slope, aspect, sunzenith, sun
       if (inherits(ilGroup, 'try-error')) {next}    #If pixels can't be grouped, move on
       pixID <- 1:length(ilGroup)
       pixToSample <- matrix(0,length(pixID))
+      # set.seed(456789)
       for (i in 1:topo_pars$numILclass) {
         check <- ilGroup == i
         num <- sum(check)
@@ -1019,8 +1020,8 @@ GetSegs <- function(peaks, x, pars, peak=NA){
   # determine the "global max/min", if peak_frac is specified, set it, if amp_frac is specified, set it
   # if min_seg_amplitude is set, choose the max of that and amp_frac
   seg_thresh <- peak_thresh <- 0
-  global_max <- max(x, na.rm=T)
-  global_min <- min(x, na.rm=T)
+  global_max <- max(x[(pars$splineBuffer+1):(pars$splineBuffer+365)], na.rm=T) #find gobal min/max within a target year
+  global_min <- min(x[(pars$splineBuffer+1):(pars$splineBuffer+365)], na.rm=T)
   if(!is.na(pars$rel_amp_frac)) seg_thresh <- (global_max - global_min) * pars$rel_amp_frac
   #if(!is.na(pars$rel_peak_frac)) peak_thresh <- global_max * pars$rel_peak_frac
   if(!is.na(pars$min_seg_amplitude)) seg_thresh <- max(pars$min_seg_amplitude, seg_thresh)
@@ -1565,6 +1566,7 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
       
       #Only keep segments with peaks within year *****
       full_segs <- full_segs[inYear[sapply(full_segs, "[[", 2)] ]  #check if peaks are in the year
+      if (length(full_segs)==0) {outAll <- c(outAll,annualMetrics(smoothed_vi,pred_dates,fillMat[,y], baseWeights[,y], yrs[y],pheno_pars));next}  #If no valid peaks within a target year, calc annual metrics, and move to next year
       
       #Get PhenoDates
       pheno_dates <- GetPhenoDates(full_segs, smoothed_vi, pred_dates, pheno_pars)
@@ -1982,7 +1984,8 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
   # Assign NA for the EVImax, EVIamp, and EVIare layers where their values exceed 10000, 10000, and 32766, respectively, 
   # and give 6 (i.e., "No cycles detected") for the pixels in all layers
   ngEVI <- matrix(0, dim(baseImage)[1], dim(baseImage)[2])           # A layer to screen all pixels having bad EVI values
-     
+
+  
   for (i in 1:length(lyrs$short_name)) {
     lyr <- lyrs[i,]
     
@@ -2000,6 +2003,7 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
     }
   }
   
+
   #Loop through layers again, write the image data to the file
   for (i in 1:length(lyrs$short_name)) {
     lyr <- lyrs[i,]
@@ -2020,6 +2024,8 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
     
     if (lyr$short_name == 'overallQA' |lyr$short_name == 'overallQA_2' |lyr$short_name == 'gupQA' |lyr$short_name == 'gdownQA' |lyr$short_name == 'gupQA_2' |lyr$short_name == 'gdownQA_2'){
       data[ngEVI == 1] <- 6 #Give 6 (i.e., "No cycle detected") for the pixels having bad EVI values 
+    }else if(lyr$short_name == 'NumCycles'){
+      data[ngEVI == 1] <- 0 #Give 0 (i.e., # of cycles is zero)
     }else{
       data[ngEVI == 1] <- 32767  #Give NA for the pixels having bad EVI values 
     }

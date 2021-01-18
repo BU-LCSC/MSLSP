@@ -124,13 +124,13 @@ calc_lyr,product_lyr,qa_lyr,short_name,long_name,units,scale,offset,data_type,va
 123,,18,gdownMaxGapCountSnow_2,"Maximum time series gap during greendown, but count snow as good ", % of segment length,1,0,Int16,0,32766,32767,-
 124,,19,gdownMaxGapFilled_2,"Maximum time series gap during greendown, but count filled observations as good ", % of segment length,1,0,Int16,0,32766,32767,-
 125,,20,gdownRsq_2,R squared during greendown,-,0.0001,0,Int16,0,32766,32767,-
-126,,21,numObs,Number of days with clear observations in calendar year,Number,1,0,Int16,0,366,32767,Number of clear observations in calendar year
+126,22,21,numObs,Number of days with clear observations in calendar year,Number,1,0,Int16,0,366,32767,Number of clear observations in calendar year
 127,,22,numObsCountSnow,Number of days with clear and snow filled observations in calendar year ,Number,1,0,Int16,0,366,32767,Number of clear and snow filled observations in calendar year 
 128,,23,maxGap,Maximum gap between clear obsevations in calendar year,Days,1,0,Int16,0,366,32767,Maximum gap between clear obsevations in calendar year
 129,,24,maxGapCountSnow,Maximum gap between clear or snow filled observations in calendar year,Days,1,0,Int16,0,366,32767,Maximum gap between clear or snow filled observations in calendar year
-,22,,gupQA,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
-,23,,gdownQA,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
-,24,,gupQA_2,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
-,25,,gdownQA_2,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
-,,,overallQA,Overall Quality Assurance for Cycle 1,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 1
-,,,overallQA_2,Overall Quality Assurance for Cycle 2,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 2
+,23,,gupQA,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
+,24,,gdownQA,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
+,25,,gupQA_2,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
+,26,,gdownQA_2,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
+,27,,overallQA,Overall Quality Assurance for Cycle 1,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 1
+,28,,overallQA_2,Overall Quality Assurance for Cycle 2,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 2
