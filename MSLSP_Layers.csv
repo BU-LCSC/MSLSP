@@ -132,5 +132,5 @@ calc_lyr,product_lyr,qa_lyr,short_name,long_name,units,scale,offset,data_type,va
 ,24,,gdownQA,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
 ,25,,gupQA_2,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
 ,26,,gdownQA_2,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
-,27,,overallQA,Overall Quality Assurance for Cycle 1,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 1
-,28,,overallQA_2,Overall Quality Assurance for Cycle 2,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 2
+,,,overallQA,Overall Quality Assurance for Cycle 1,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 1
+,,,overallQA_2,Overall Quality Assurance for Cycle 2,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 2
