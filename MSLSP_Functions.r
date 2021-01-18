@@ -999,7 +999,7 @@ GetSegs <- function(peaks, x, pars, peak=NA){
   tmp_peaks <- peaks[order(x[peaks])] # so we only have to sort once if they're in the wrong order
   if(!identical(tmp_peaks, peaks)) peaks <- tmp_peaks
   
-  # if no peak is specified, we start at the beginnning
+  # if no peak is specified, we start at the beginning
   if(is.na(peak)) peak <- peaks[1]
   
   # get the next largest peak; will be NA if this peak is the highest (last one to do)
@@ -1015,7 +1015,7 @@ GetSegs <- function(peaks, x, pars, peak=NA){
   #   peak_thresh <- 0
   # }
   
-  # we could have any combinaton of rel_amp_frac, rel_peak_frac, and min_seg_amplitude specified
+  # we could have any combination of rel_amp_frac, rel_peak_frac, and min_seg_amplitude specified
   # initialize seg_thresh and peak_thresh to zero
   # determine the "global max/min", if peak_frac is specified, set it, if amp_frac is specified, set it
   # if min_seg_amplitude is set, choose the max of that and amp_frac
@@ -1984,6 +1984,7 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
   # Assign NA for the EVImax, EVIamp, and EVIare layers where their values exceed 10000, 10000, and 32766, respectively, 
   # and give 6 (i.e., "No cycles detected") for the pixels in all layers
   ngEVI <- matrix(0, dim(baseImage)[1], dim(baseImage)[2])           # A layer to screen all pixels having bad EVI values
+
   
   for (i in 1:length(lyrs$short_name)) {
     lyr <- lyrs[i,]
@@ -2002,7 +2003,7 @@ CreateProduct <- function(yr,productFile, qaFile, productTable, baseImage, water
     }
   }
   
-  
+
   #Loop through layers again, write the image data to the file
   for (i in 1:length(lyrs$short_name)) {
     lyr <- lyrs[i,]
