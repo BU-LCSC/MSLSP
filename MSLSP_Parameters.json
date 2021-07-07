@@ -39,9 +39,9 @@
   
     "SCC":{
     
-    "workDir":"/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/",
-    "logDir":"/projectnb/modislc/projects/landsat_sentinel/MSLSP_HLS30/runLogs/",
-    "dataDir":"/projectnb/modislc/projects/landsat_sentinel/v1_4/",
+    "workDir":"/projectnb/modislc/users/mkmoon/Planet/data/mslsp/output/",
+    "logDir":"/projectnb/modislc/users/mkmoon/Planet/data/mslsp/runLogs/",
+    "dataDir":"/projectnb/modislc/users/mkmoon/Planet/data/mslsp/input/",
     "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
     "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
