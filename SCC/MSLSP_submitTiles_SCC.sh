@@ -1,7 +1,7 @@
 
 
 parameters="/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
-tileList="tileLists/v1_test.txt"
+tileList="tileLists/dc.txt"
 
 
 numCores=$( jq .SCC.numCores $parameters )
