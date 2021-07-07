@@ -1467,12 +1467,12 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
         
         
         #Mask spline in gaps, and before/after first/last image
-        maskMat[fill_locations[all_dates %in% pred_dates]] <- 1    #Mask spline in gaps
-        maskMat[pred_dates < dateSub[1]] <- 1                      #Mask spline before first image and after last image
-        maskMat[pred_dates > dateSub[length(dateSub)]] <- 1
+        maskMat[fill_locations[all_dates %in% pred_dates],y] <- 1    #Mask spline in gaps
+        maskMat[pred_dates < dateSub[1],y] <- 1                      #Mask spline before first image and after last image
+        maskMat[pred_dates > dateSub[length(dateSub)],y] <- 1
         
         #Mask spline in the buffer years (only interested in comparing splines in target year)
-        maskMat[format(pred_dates,'%Y') != yrs[y]]  <- 1
+        maskMat[format(pred_dates,'%Y') != yrs[y],y]  <- 1
         
         fillDs <- pred_dates %in% dateSub
         
@@ -1496,7 +1496,7 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
     b6Mat <- matrix(b6Mat,vecLength);b7Mat <- matrix(b7Mat,vecLength)  
     
     smoothMat_Masked <- smoothMat
-    smoothMat_Masked[maskMat] <- NA
+    smoothMat_Masked[as.logical(maskMat)] <- NA
     
   
     #Loop through years, compare spline to other years, weight each year based on similiarity, fit spline, calculate phenology
