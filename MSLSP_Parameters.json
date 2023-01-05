@@ -2,10 +2,10 @@
   "setup":{
     
     "imgStartYr":2016,
-    "imgEndYr":2021,
+    "imgEndYr":2022,
     
     "phenStartYr":2017,
-    "phenEndYr":2020,
+    "phenEndYr":2021,
     
     "downloadImagery":true,
     "preprocessImagery":true,
