@@ -44,13 +44,14 @@
 
 if [ $# -ne 4 ]
 then
-	echo "Usage: $0 <tilelist> <date_begin> <date_end> <out_dir>" >&2
-	echo "where	<tilelist> is a text file of 5-character tile IDs" >&2
+	echo "Usage: $0 <tile> <date_begin> <date_end> <out_dir>" >&2
+	echo "where	<tile> is a text file of 5-character tile IDs" >&2
 	echo "		<date_begin> and <date_end> are in the format 2021-12-31" >&2 
 	echo "		<out_dir> is the base of output directory. Subdirectories are to be created within it " >&2 
 	exit 1
 fi
-tilelist=$1
+# tilelist=$1
+tile=$1
 datebeg=$2
 dateend=$3
 OUTDIR=$4
@@ -131,8 +132,8 @@ query="${query}&attribute[]=int,SPATIAL_COVERAGE,$SPATIAL,"		# min
 ### Add tile ID and begin query
 meta=/tmp/${fbase}.down.meta.txt
 >$meta
-for tile in $(cat $tilelist)
-do
+# for tile in $(cat $tilelist)
+# do
 	# A rough check if the tile ID is valid
 	case $tile in
 	  [0-6][0-9][A-Z][A-Z][A-Z]);;
@@ -157,7 +158,7 @@ do
 	else
 		curl -s "${query_final}&attribute[]=string,MGRS_TILE_ID,$tile" >>$meta
 	fi
-done
+# done
 
 ### Parse metadata for a list of files to download. Export for subshell.
 ### Sort file names for humans.
@@ -196,16 +197,17 @@ function download_granule()
 	tileid=$2
 	year=$3
 
-	subdir=$(echo $tileid | awk '{print substr($0,1,2) "/" substr($0,3,1) "/" substr($0,4,1) "/" substr($0,5,1)}')
-	outdir=$OUTDIR/$type/$year/$subdir/$granule
-	mkdir -p $outdir
+	# subdir=$(echo $tileid | awk '{print substr($0,1,2) "/" substr($0,3,1) "/" substr($0,4,1) "/" substr($0,5,1)}')
+	# outdir=$OUTDIR/$type/$year/$subdir/$granule
+	# mkdir -p $outdir
+	outdir=$OUTDIR/$granule
 
 	# Cookie is needed by curl on my mac at least. Without it, only the jpg and json 
 	# files in lp-prod-public are downloaded, but not the files in /lp-prod-protected/ 
 	# on the DAAC server.
 	cookie=/tmp/tmp.cookie.$granule
 
-	echo "Downloading into $outdir"
+	# echo "Downloading into $outdir"
 	if [ $WGET = true ]
 	then
 		wget -q -N -i $allfile -P $outdir
@@ -235,7 +237,7 @@ export -f download_granule
 
 ### Run $NP bash subshells
 ng=$(grep B01 $flist | wc -l | awk '{print $1}')
-echo "$ng granules to download"
+echo "$datebeg to $dateend : $ng granules to download"
 grep B01 $flist | xargs -n1 -P $NP -I% bash -c "download_granule %"  
 
 rm -f $meta $flist
