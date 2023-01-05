@@ -14,7 +14,12 @@ imgDir="${baseDir}${tile}/images/"
 ##########
 for y in `seq $imgStartYr $imgEndYr`;
 do
-   downloadHLS.sh -t $tile -y $y $imgDir 
+   #downloadHLS.sh -t $tile -y $y $imgDir 
+   
+   imgSD="${y}-01-01"
+   imgED="${y}-12-31"
+   getHLS.sh $tile $imgSD $imgED $imgDir
+   
 done
 
 
