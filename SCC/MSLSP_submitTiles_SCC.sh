@@ -1,7 +1,11 @@
 
 
 parameters="/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
+<<<<<<< HEAD
 tileList="tileLists/cdsa.txt"
+=======
+tileList="tileLists/dc.txt"
+>>>>>>> 5e986ae2c74f612496f19efcf6d663a4d82e581d
 
 
 numCores=$( jq .SCC.numCores $parameters )
