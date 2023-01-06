@@ -35,22 +35,19 @@ tempParams=${parameters}".tmp"
 if $(jq .SCC.runS10 $parameters )
 then
   fmask10m="${dataDir}S10/${tile}/fmask/"
-	mkdir -p ${fmask10m}	
+	mkdir -p ${fmask10m}
   cp ${parameters} ${tempParams}; jq --arg fmask10m "$fmask10m" '.dirs.fmask10m = $fmask10m' ${tempParams}>${parameters}
 fi
 
 
-fmaskDir="${dataDir}HLS30/${tile}/fmask/"
 tempDir="${workDir}${tile}/temp/"	
 chunkDir="${workDir}${tile}/imageChunks/"
 phenDir="${workDir}${tile}/phenoMetrics/"
 
-mkdir -p $fmaskDir
 mkdir -p $tempDir
 mkdir -p $chunkDir
 mkdir -p $phenDir
 
-cp ${parameters} ${tempParams}; jq --arg fmaskDir "$fmaskDir" '.dirs.fmaskDir = $fmaskDir' ${tempParams}>${parameters}
 cp ${parameters} ${tempParams}; jq --arg tempDir "$tempDir" '.dirs.tempDir = $tempDir' ${tempParams}>${parameters}
 cp ${parameters} ${tempParams}; jq --arg chunkDir "$chunkDir" '.dirs.chunkDir = $chunkDir' ${tempParams}>${parameters}
 cp ${parameters} ${tempParams}; jq --arg phenDir "$phenDir" '.dirs.phenDir = $phenDir' ${tempParams}>${parameters}
