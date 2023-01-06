@@ -81,73 +81,39 @@ getMasks <-function(qaName) {
 #If a chunk is empty (no data), don't write to disk. Huge I/O savings.
 #Douglas Bolton
 #---------------------------------------------------------------------
-ApplyMask_QA_and_Fmask <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, deleteInput=F) {
+ApplyMask_QA <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, deleteInput=F) {
   
   pheno_pars <- params$phenology_parameters   #Pull phenology parameters
   
   #Get sensor, names sorted
-  imgName_strip = tail(unlist(strsplit(imgName,'/')),n = 1)
+  imgName_strip = paste0(unlist(strsplit(tail(unlist(strsplit(imgName,'/')),n = 1),'.',fixed=T))[1:6],collapse='.')
   sensor = unlist(strsplit(imgName_strip,'.',fixed = T))[2]
   tileTxt = unlist(strsplit(imgName_strip,'.',fixed = T))[3]
-  date = unlist(strsplit(imgName_strip,'.',fixed = T))[4]
+  date = substr(unlist(strsplit(imgName_strip,'.',fixed = T))[4],1,7)
   outBase = paste0('HLS_',sensor,'_',tileTxt,'_',date)
   
-  #Mask for clouds and snow. Use QA flags for Landsat. Impliment Fmask 4.0 for Sentinel
+  # Note: Since HLS v2.0, S30 provides Fmask layer, so do not need to run Fmask for Sentienl - 1/5/2023
   ################################################################################
-  if (sensor == 'L30' | params$setup$runFmaskSentinel == FALSE) {
-    qaName = paste0('HDF4_EOS:EOS_GRID:',imgName, ':Grid:QA')
+    qaName = imgName
     maskList <- getMasks(qaName)
     mask <- maskList[[1]]
     snow <- maskList[[2]]
     snow[waterMask] <- FALSE   #Remove snow flags that are over water
     remove(maskList)
-  } else {
-    if (sensor == 'S30') {
-      fmaskName <- paste0(params$dirs$fmaskDir, gsub('hdf','',imgName_strip), "Fmask.tif")
-      if (!file.exists(fmaskName)) {
-        RunFmask(imgName, tile, params$dirs$imgDir, params$dirs$fmaskDir, params$dirs$fmaskDir, params)}
-    } else {
-      #If it's S10 data, resample fmask. A 30m version must already exist!
-      imgName_strip30 <- gsub(".S10",".S30",imgName_strip)
-      fmaskName <- paste0(params$dirs$fmask10m, gsub('hdf','',imgName_strip), "Fmask.tif")
-      if (!file.exists(fmaskName)) {
-        fmaskIn <- paste0(params$dirs$fmaskDir, gsub('hdf','',imgName_strip30), "Fmask.tif")
-        if (file.exists(fmaskIn)) {
-          run <- try({system2("gdalwarp",paste("-overwrite -r near -ts 10980 10980 -of GTiff",fmaskIn,fmaskName),stdout=T,stderr=T)},silent=T)
-        }
-      }
-    }
-    
-    logIt <- try({
-      fmask <- readGDAL(fmaskName,silent=T)$band1     #If Fmask doesn't exist (didn't run), function will fail and error will be logged
-      mask <- (fmask == 4) | (fmask == 2) | (fmask == 255)  #If cloud, cloud shadow, or no data
-      snow  <- fmask == 3
-      snow[waterMask] <- FALSE  #Remove snow flags that are over water (shouldn't be any though)
-      remove(fmask)
-    },silent=TRUE)
-    
-    if (inherits(logIt, 'try-error')) {
-      qaName = paste0('HDF4_EOS:EOS_GRID:',imgName, ':Grid:QA')    #If there was an error with fmask, just use HLS QA
-      maskList <- getMasks(qaName)
-      mask <- maskList[[1]]
-      snow <- maskList[[2]]
-      snow[waterMask] <- FALSE   #Remove snow flags that are over water
-      remove(maskList)
-      print(paste('Using backup mask for',imgName))}
-  }
+  
   
   #Open the image bands
   ##############################################################################
-  theBase <- paste0('HDF4_EOS:EOS_GRID:',imgName,':Grid:')
+  imgDir <- paste0(unlist(strsplit(imgName,'/'))[1:13],collapse='/')
   if (sensor == 'L30') {
-      bNames <- c('band02','band03','band04','band05','band06','band07')
+      bNames <- c('B02','B03','B04','B05','B06','B07')
       bands <- matrix(as.integer(0),length(mask),length(bNames))
-      for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
+      for (i in 1:length(bNames)) {bands[,i] <- values(raster(paste0(imgDir,'/',imgName_strip,'.',bNames[i],'.tif')))*10000}
 
   } else if (sensor == 'S30') {
      bNames <- c('B02','B03','B04','B8A','B11','B12','B05','B06','B07')
      bands <- matrix(as.integer(0),length(mask),length(bNames))
-     for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
+     for (i in 1:length(bNames)) {bands[,i] <- values(raster(paste0(imgDir,'/',imgName_strip,'.',bNames[i],'.tif')))*10000}
      
   } else if (sensor == 'S10') {
     #Need to get all bands to 10m first. Using Broad band NIR (10m) instead of Narrow (20m)
@@ -158,12 +124,12 @@ ApplyMask_QA_and_Fmask <-function(imgName, tile, waterMask, chunkStart, chunkEnd
       run <- try({system2("gdalwarp",paste("-overwrite -r near -ts 10980 10980 -of GTiff",inName,outName),stdout=T,stderr=T)},silent=T)
     }
 
-    fullNames <- c(paste0(theBase, c('B02','B03','B04')), 
+    fullNames <- c(paste0(theBase, c('B02','B03','B04')),
                    paste0(tifBase,bNames,'.tif'))
-    
+
     bands <- matrix(as.integer(0),length(mask),length(fullNames))
     for (i in 1:length(fullNames)) {bands[,i] <- as.integer(readGDAL(fullNames[i],silent=T)$band1*10000)}
-    
+
     for (bName in bNames) {file.remove(paste0(tifBase,bName,'.tif'))}
 
   }
@@ -198,62 +164,6 @@ ApplyMask_QA_and_Fmask <-function(imgName, tile, waterMask, chunkStart, chunkEnd
   #If requested, delete the input file once it is processed
   if (deleteInput == TRUE) {file.remove(imgName)}
 }
-
-
-
-
-RunFmask <-function(imgName, tile, auxFold, fmaskFold, outDir, params) {
-  
-  #Different approach depending on if we are on SCC or AWS
-  #If on SCC, need to set environmental variables 
-  if (params$setup$AWS_or_SCC == 'SCC') {
-    system(paste('MCRROOT="/share/pkg/matlab/2018b/install"',
-                 'LD_LIBRARY_PATH=.:${MCRROOT}/runtime/glnxa64',
-                 'LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/bin/glnxa64',
-                 'LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/sys/os/glnxa64',
-                 'LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/sys/opengl/lib/glnxa64',
-                 'export LD_LIBRARY_PATH',
-                 paste('eval',params$setup$fmaskFunction,tile,imgName,auxFold,fmaskFold),sep='\n'))
-  
-   } else {
-
-
-    #Get sensor, names sorted
-    imgName_strip <- tail(unlist(strsplit(imgName,'/')),n = 1)
-    fileBase <- paste0(outDir, gsub('hdf','',imgName_strip))
-    
-    #Open the image bands
-    ##############################################################################
-    inBase <- paste0('HDF4_EOS:EOS_GRID:',imgName,':Grid:')
-  
-    bandNames <- c('B02','B03','B04','B8A','B11','B12','B10','B07','B08')
-    for (b in bandNames) { 
-      inName <- paste0(inBase, b)
-      outName <- paste0(fileBase,b,'.tif')
-      system(paste("gdal_translate -q",inName,outName))}
-  
-    
-    #Get sun zenith and azimuth.
-    #Some L8 scenes will have two values (two L8 images as inputs). We will take the average of these two values
-    info = gdalinfo(imgName)
-    ulx <- as.numeric(unlist(strsplit(info[pmatch('  ULX',info)],'='))[2]) + params$setup$image_res/2    #Adjust for matlab (needs center of pixel)
-    uly <- as.numeric(unlist(strsplit(info[pmatch('  ULY',info)],'='))[2]) - params$setup$image_res/2    #Adjust for matlab (needs center of pixel)
-    sza <- as.numeric(unlist(strsplit(info[pmatch('  MEAN_SUN_ZENITH_ANGLE(B01)',info)],'='))[2])
-    saa <- as.numeric(unlist(strsplit(info[pmatch('  MEAN_SUN_AZIMUTH_ANGLE(B01)',info)],'='))[2])
-    vza <- as.numeric(unlist(strsplit(info[pmatch('  MEAN_VIEW_ZENITH_ANGLE(B01)',info)],'='))[2])
-    vaa <- as.numeric(unlist(strsplit(info[pmatch('  MEAN_VIEW_AZIMUTH_ANGLE(B01)',info)],'='))[2])  
-  
-    zone <- unlist(strsplit(info[pmatch('  HORIZONTAL_CS_NAME',info)],' '))
-    zone <- zone[length(zone)]
-    zone <- as.numeric(substr(zone,1,2))
-  
-    system(paste('MCR_CACHE_ROOT=$TMPDIR ',params$setup$fmaskFunction,tile,fileBase,auxFold,fmaskFold,zone,ulx,uly,sza,saa,vza,vaa)) 
-    
-    #Delete the temporary images
-    for (b in bandNames) {file.remove(paste0(fileBase,b,'.tif'))}
-  }
-}
-
 
 
 
@@ -373,23 +283,20 @@ runTopoCorrection <- function(imgName, groups, slopeVals, aspectVals, chunkStart
   topo_pars <- params$topocorrection_parameters
   
   #Get sensor, names sorted
-  imgName_strip <- tail(unlist(strsplit(imgName,'/')),n = 1)
+  imgName_strip = paste0(unlist(strsplit(tail(unlist(strsplit(imgName,'/')),n = 1),'.',fixed=T))[1:6],collapse='.')
   sensor <- unlist(strsplit(imgName_strip,'.',fixed = T))[2]
   tileTxt <- unlist(strsplit(imgName_strip,'.',fixed = T))[3]
-  date <- unlist(strsplit(imgName_strip,'.',fixed = T))[4]
+  date = substr(unlist(strsplit(imgName_strip,'.',fixed = T))[4],1,7)
   outBase <- paste0('HLS_',sensor,'_',tileTxt,'_',date)
 
   #Get sun zenith and azimuth.
   #Some L8 scenes will have two values (two L8 images as inputs). We will take the average of these two values
-  info <- gdalinfo(imgName)
-  line <- info[pmatch('  MEAN_SUN_ZENITH_ANGLE',info)]
-  line <- unlist(strsplit(line,'='))[2]
-  zMean <- mean(as.numeric(unlist(strsplit(line,','))))
+  imgDir <- paste0(unlist(strsplit(imgName,'/'))[1:13],collapse='/')
+  info <- unlist(xmlToList(paste0(imgDir,'/',imgName_strip,'.cmr.xml')))
+  zMean <- as.numeric(info[which(info=='MEAN_SUN_ZENITH_ANGLE')[1]+1])
   sunzenith <- (pi/180) * zMean
   
-  line = info[pmatch('  MEAN_SUN_AZIMUTH_ANGLE',info)]
-  line <- unlist(strsplit(line,'='))[2]
-  aMean <- mean(as.numeric(unlist(strsplit(line,','))))
+  aMean <- zMean <- as.numeric(info[which(info=='MEAN_SUN_AZIMUTH_ANGLE')[1]+1])
   sunazimuth <- (pi/180) * aMean
   
   numChunks <- length(chunkEnd)
