@@ -7,7 +7,7 @@
     "phenStartYr":2017,
     "phenEndYr":2021,
     
-    "downloadImagery":true,
+    "downloadImagery":false,
     "preprocessImagery":true,
     "runPhenology":true,
     
@@ -26,8 +26,7 @@
     "rScript":"/shared/code/MSLSP/MSLSP_Script.r",
     "rFunctions":"/shared/code/MSLSP/MSLSP_Functions.r",
     "productTable":"/shared/code/MSLSP/MSLSP_Layers.csv",
-    "fmaskFunction":"/shared/code/fmask_compiled/autoFmask_HLS_No_HDF",
-	  "envVariables":"/shared/code/MSLSP/env_variables_aws.sh",
+    "envVariables":"/shared/code/MSLSP/env_variables_aws.sh",
 	  "s3Dir":"s3://mslsp/v1.0/",
 	  
 	  "numCores":48,
@@ -45,7 +44,6 @@
     "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
     "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
-    "fmaskFunction":"/projectnb/modislc/projects/landsat_sentinel/fmask_compiled/autoFmask_HLS",
     
     "numCores":28,
     "numChunks":196,
