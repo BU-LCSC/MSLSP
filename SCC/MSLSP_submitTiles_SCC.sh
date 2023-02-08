@@ -66,7 +66,7 @@ else
         tileDir="${workDir}${tile}/"
         paramName="${tileDir}parameters_${jobTime}.json"
         nameArg="-N R_${tile}"
-        logArg="-o ${workDir}Run_${tile}_${jobTime}.txt"
+        logArg="-o ${logDir}Run_${tile}_${jobTime}.txt"
         qsub $nameArg $logArg $nodeArgs MSLSP_runTile_SCC.sh $tile $paramName $jobTime
     done < $tileList
 fi 
