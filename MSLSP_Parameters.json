@@ -1,13 +1,13 @@
 {
   "setup":{
     
-    "imgStartYr":2016,
-    "imgEndYr":2021,
+    "imgStartYr":2019,
+    "imgEndYr":2020,
     
-    "phenStartYr":2017,
+    "phenStartYr":2019,
     "phenEndYr":2020,
     
-    "downloadImagery":true,
+    "downloadImagery":false,
     "preprocessImagery":true,
     "runPhenology":true,
     
@@ -39,13 +39,13 @@
   
     "SCC":{
     
-    "workDir":"/projectnb/modislc/users/mkmoon/cdsa/mslsp/output/",
-    "logDir":"/projectnb/modislc/users/mkmoon/cdsa/mslsp/runLogs/",
-    "dataDir":"/projectnb/modislc/users/mkmoon/cdsa/mslsp/input/",
+    "workDir":"/projectnb/nasa-marsh/MSLSP/Output/",
+    "logDir":"/projectnb/nasa-marsh/MSLSP/runLogs/",
+    "dataDir":"/projectnb/nasa-marsh/MSLSP/Input/",
     "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
     "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
-    "fmaskFunction":"/projectnb/modislc/projects/landsat_sentinel/fmask_compiled/autoFmask_HLS",
+    "fmaskFunction":"/projectnb/nasa-marsh/fmask_compiled/autoFmask_HLS",
     
     "numCores":28,
     "numChunks":196,
