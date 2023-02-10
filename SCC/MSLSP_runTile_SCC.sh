@@ -6,11 +6,13 @@
 #######
 #Load required modules
 module purge
-module load R/3.6.0
-module load geos/3.7.0
-module load rstudio/1.2.1335
-module load qgis/3.4.2
-module load gdal/2.3.2
+module load jq
+module load python3/3.7.7
+module load gdal
+module load grass
+module load sqlite3/3.37.2
+module load R/4.2.1
+module load rstudio/2022.07.2-576
 
 
 tile=$1

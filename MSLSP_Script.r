@@ -14,10 +14,10 @@ print('Loading packages')
 print('')
 print('')
 
+library(sf)
+library(sp)
 library(raster)
-library(rgdal)
-library(gdalUtils)
-library(rgeos)
+library(terra)
 library(imager)   #needed for efficient distance to snow calculate
 library(ncdf4)
 
@@ -49,6 +49,11 @@ tile <- args[1]
 jsonFile <- args[2]
 runLog <- args[3] 
 errorLog <- args[4] 
+
+# tile     <- "15RWN"
+# jsonFile <- "/projectnb/nasa-marsh/MSLSP/Output/15RWN/parameters_2023_02_09_19_56_57.json"
+# runLog   <- "/projectnb/nasa-marsh/MSLSP/runLogs/15RWN_instanceInfo_2023_02_09_19_56_57.txt"
+# errorLog <- "/projectnb/nasa-marsh/MSLSP/runLogs/15RWN_errorLog_2023_02_09_19_56_57.txt"
 
 #Get default parameters
 params <- fromJSON(file=jsonFile)
@@ -181,10 +186,10 @@ for (y in uniqueYrs) {
 #Get raster information from first image
 ##########################
 qaName  <-  paste0('HDF4_EOS:EOS_GRID:',imgList[1], ':Grid:QA')
-ref_info <- gdalinfo(qaName,proj4=TRUE,raw_output=FALSE)
-ts <- c(ref_info$columns,ref_info$rows) #Get image rows and columns
-numPix  <-  ts[1] * ts[2]   #Get total number of pixels
 baseImage  <-  raster(qaName) #Set up base image that we'll use for outputs
+numPix  <-  baseImage@ncols*baseImage@nrows   #Get total number of pixels
+
+
 
 #Sort out chunk boundaries
 #################
@@ -195,9 +200,12 @@ numPixPerChunk <- chunkEnd - chunkStart + 1  #Number of pixels in each chunk
 
 
 #Read in water mask
-water <- readGDAL(paste0(params$dirs$imgDir,'water_',tile,'.tif'),silent=T)$band1
+water <- values(raster(paste0(params$dirs$imgDir,'water_',tile,'.tif')))
 waterMask <- water == 2 | water == 0    #Mask water and zero (zero = ocean far from shore)
 remove(water)
+
+
+
 #STEP 1 - Preprocess images
 #####################################################
 #####################################################
@@ -225,11 +233,13 @@ if (params$setup$preprocessImagery) {
     #Read in slope and aspect rasters
     #IMPORTANT: Code expects units of slope and aspect to be radians * 10000
     slope <- raster(paste0(params$dirs$imgDir,'slope_',tile,'.tif')) #Keeping this slope raster as a template for other temporary outputs
-    slopeVals <- readGDAL(paste0(params$dirs$imgDir,'slope_',tile,'.tif'),silent=T)$band1
+    # slopeVals <- readGDAL(paste0(params$dirs$imgDir,'slope_',tile,'.tif'),silent=T)$band1
+    slopeVals <- values(raster(paste0(params$dirs$imgDir,'slope_',tile,'.tif')))
     slopeVals[slopeVals == 65534] = NA
     slopeVals = slopeVals / 10000
     
-    aspectVals = readGDAL(paste0(params$dirs$imgDir,'aspect_',tile,'.tif'),silent=T)$band1
+    # aspectVals = readGDAL(paste0(params$dirs$imgDir,'aspect_',tile,'.tif'),silent=T)$band1
+    aspectVals = values(raster(paste0(params$dirs$imgDir,'aspect_',tile,'.tif')))
     aspectVals[aspectVals == 65534] = NA
     aspectVals = aspectVals / 10000
     
