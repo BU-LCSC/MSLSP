@@ -2,7 +2,7 @@
 module load jq
 
 parameters="/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
-tileList="tileLists/uhk_neon.txt"
+tileList="tileLists/cr_LA.txt"
 
 
 numCores=$( jq .SCC.numCores $parameters )
