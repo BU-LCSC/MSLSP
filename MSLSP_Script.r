@@ -207,7 +207,7 @@ numPixPerChunk <- chunkEnd - chunkStart + 1  #Number of pixels in each chunk
 
 
 #Read in water mask
-water <- values(raster(paste0(params$dirs$imgDir,'water_',tile,'.tif')))
+water <- as.integer(values(rast(paste0(params$dirs$imgDir,'water_',tile,'.tif'))))
 waterMask <- water == 2 | water == 0    #Mask water and zero (zero = ocean far from shore)
 remove(water)
 
@@ -241,12 +241,12 @@ if (params$setup$preprocessImagery) {
     #IMPORTANT: Code expects units of slope and aspect to be radians * 10000
     slope <- raster(paste0(params$dirs$imgDir,'slope_',tile,'.tif')) #Keeping this slope raster as a template for other temporary outputs
     # slopeVals <- readGDAL(paste0(params$dirs$imgDir,'slope_',tile,'.tif'),silent=T)$band1
-    slopeVals <- values(raster(paste0(params$dirs$imgDir,'slope_',tile,'.tif')))
+    slopeVals <- as.integer(values(rast(paste0(params$dirs$imgDir,'slope_',tile,'.tif'))))
     slopeVals[slopeVals == 65534] = NA
     slopeVals = slopeVals / 10000
     
     # aspectVals = readGDAL(paste0(params$dirs$imgDir,'aspect_',tile,'.tif'),silent=T)$band1
-    aspectVals = values(raster(paste0(params$dirs$imgDir,'aspect_',tile,'.tif')))
+    aspectVals = as.integer(values(rast(paste0(params$dirs$imgDir,'aspect_',tile,'.tif'))))
     aspectVals[aspectVals == 65534] = NA
     aspectVals = aspectVals / 10000
     

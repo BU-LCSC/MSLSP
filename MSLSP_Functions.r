@@ -35,7 +35,7 @@ return(boundaries)
 getMasks <-function(qaName) {
   
   #Read in QA
-  qaM <- values(raster(qaName))
+  qaM <- as.integer(values(rast(qaName)))
 
   #Make empty masks
   #Must have two separate masks, because pixels can have multiple labels (e.g., snow in fmask, cloud in lasrc)
@@ -120,7 +120,7 @@ ApplyMask_QA_and_Fmask <-function(imgName, tile, waterMask, chunkStart, chunkEnd
     
     logIt <- try({
       # fmask1 <- readGDAL(fmaskName,silent=T)$band1     #If Fmask doesn't exist (didn't run), function will fail and error will be logged
-      fmask <- values(raster(fmaskName,silent=T))     #If Fmask doesn't exist (didn't run), function will fail and error will be logged
+      fmask <- as.integer(values(rast(fmaskName)))     #If Fmask doesn't exist (didn't run), function will fail and error will be logged
       mask <- (fmask == 4) | (fmask == 2) | (fmask == 255)  #If cloud, cloud shadow, or no data
       snow  <- fmask == 3
       snow[waterMask] <- FALSE  #Remove snow flags that are over water (shouldn't be any though)
@@ -144,13 +144,13 @@ ApplyMask_QA_and_Fmask <-function(imgName, tile, waterMask, chunkStart, chunkEnd
       bNames <- c('band02','band03','band04','band05','band06','band07')
       bands <- matrix(as.integer(0),length(mask),length(bNames))
       # for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
-      for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(raster(paste0(theBase, bNames[i])))*10000)}
+      for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(rast(paste0(theBase, bNames[i])))*10000)}
 
   } else if (sensor == 'S30') {
      bNames <- c('B02','B03','B04','B8A','B11','B12','B05','B06','B07')
      bands <- matrix(as.integer(0),length(mask),length(bNames))
      # for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
-     for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(raster(paste0(theBase, bNames[i])))*10000)}
+     for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(rast(paste0(theBase, bNames[i])))*10000)}
      
   } else if (sensor == 'S10') {
     #Need to get all bands to 10m first. Using Broad band NIR (10m) instead of Narrow (20m)
@@ -166,7 +166,7 @@ ApplyMask_QA_and_Fmask <-function(imgName, tile, waterMask, chunkStart, chunkEnd
     
     bands <- matrix(as.integer(0),length(mask),length(fullNames))
     # for (i in 1:length(fullNames)) {bands[,i] <- as.integer(readGDAL(fullNames[i],silent=T)$band1*10000)}
-    for (i in 1:length(fullNames)) {bands[,i] <- as.integer(values(raster(fullNames[i]))*10000)}
+    for (i in 1:length(fullNames)) {bands[,i] <- as.integer(values(rast(fullNames[i]))*10000)}
     
     for (bName in bNames) {file.remove(paste0(tifBase,bName,'.tif'))}
 
