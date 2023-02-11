@@ -441,7 +441,7 @@ runTopoCorrection <- function(imgName, groups, slopeVals, aspectVals, chunkStart
       
 
     corr = round(corr * 10000)                  #Convert back to integer
-    corr[corr < 0]  <-  NA                      #Remove negative reluctance values
+    corr[corr < 0]  <-  NA                      #Remove negative reflectance values
     
     #Mask pixels that have missing data in ANY band. These are likely problem pixels (and we need most bands for despiking, kmeans, snow detection, etc).
     check <- rowSums(is.na(corr)) > 0
