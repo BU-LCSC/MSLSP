@@ -93,9 +93,9 @@ fi
 runLog="${logDir}${tile}_instanceInfo_${timeStamp}.txt"
 errorLog="${logDir}${tile}_errorLog_${timeStamp}.txt"
 
-echo "tile:${tile}"  >"${runLog}"
-echo "time:${timeStamp}"  >>"${runLog}"
-echo "run:SCC"  >>"${runLog}"
+echo "tile:${tile}"           >>"${runLog}"
+echo "time:${timeStamp}"      >>"${runLog}"
+echo "run:SCC"                >>"${runLog}"
 echo "num-cores:${numCores}"  >>"${runLog}"
 
 #Run the script
