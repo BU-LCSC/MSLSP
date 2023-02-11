@@ -21,6 +21,13 @@ library(terra)
 library(imager)   #needed for efficient distance to snow calculate
 library(ncdf4)
 
+# library(raster)
+# library(rgdal)
+# library(gdalUtils)
+# library(rgeos)
+# library(imager)   #needed for efficient distance to snow calculate
+# library(ncdf4)
+
 library(iterators)
 library(foreach)
 library(doMC)
@@ -51,9 +58,9 @@ runLog <- args[3]
 errorLog <- args[4] 
 
 # tile     <- "15RWN"
-# jsonFile <- "/projectnb/nasa-marsh/MSLSP/Output/15RWN/parameters_2023_02_09_19_56_57.json"
-# runLog   <- "/projectnb/nasa-marsh/MSLSP/runLogs/15RWN_instanceInfo_2023_02_09_19_56_57.txt"
-# errorLog <- "/projectnb/nasa-marsh/MSLSP/runLogs/15RWN_errorLog_2023_02_09_19_56_57.txt"
+# jsonFile <- "/projectnb/nasa-marsh/MSLSP/Output/15RWN/parameters_2023_02_10_20_17_18.json"
+# runLog   <- "/projectnb/nasa-marsh/MSLSP/runLogs/15RWN_instanceInfo_2023_02_10_20_17_18.txt"
+# errorLog <- "/projectnb/nasa-marsh/MSLSP/runLogs/15RWN_instanceInfo_2023_02_10_20_17_18.txt"
 
 #Get default parameters
 params <- fromJSON(file=jsonFile)

@@ -17,10 +17,10 @@ mkdir -p $logDir
 if $(jq .SCC.runS10 $parameters )
 then
     baseDir="${dataDir}S10/"
-    nodeArgs="-l h_rt=24:00:00 -l mem_per_core=16G -pe omp ${numCores}"
+    nodeArgs="-l h_rt=24:00:00 -l mem_per_core=16G -pe mpi_16_tasks_per_node ${numCores}"
 else
     baseDir="${dataDir}HLS30/"
-    nodeArgs="-l h_rt=12:00:00 -pe omp ${numCores}"
+    nodeArgs="-l h_rt=12:00:00 -pe mpi_16_tasks_per_node ${numCores}"
 fi
 
 
