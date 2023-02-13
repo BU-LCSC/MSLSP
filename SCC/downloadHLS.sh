@@ -97,8 +97,8 @@ function parse_html
         echo $items
 }
 
-html=/tmp/tmp.index.html
-producthtml=/tmp/tmp_all_hdf.html
+html=$OUTDIR/tmp.index.html
+producthtml=$OUTDIR/tmp_all_hdf.html
 outfile=
 trap 'rm -f $html $producthtml' 0
 trap ' 	case "$outfile" in

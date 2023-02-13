@@ -1,8 +1,8 @@
 
+module load jq
 
 parameters="/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
-tileList="tileLists/dc.txt"
-
+tileList="tileLists/cr_etc.txt"
 
 numCores=$( jq .SCC.numCores $parameters )
 workDir=$( jq --raw-output .SCC.workDir $parameters )
@@ -16,10 +16,10 @@ mkdir -p $logDir
 if $(jq .SCC.runS10 $parameters )
 then
     baseDir="${dataDir}S10/"
-    nodeArgs="-l h_rt=24:00:00 -l mem_per_core=16G -pe omp ${numCores}"
+    nodeArgs="-l h_rt=24:00:00 -l mem_per_core=16G -pe mpi_16_tasks_per_node ${numCores}"
 else
     baseDir="${dataDir}HLS30/"
-    nodeArgs="-l h_rt=12:00:00 -pe omp ${numCores}"
+    nodeArgs="-l h_rt=12:00:00 -pe mpi_16_tasks_per_node ${numCores}"
 fi
 
 
@@ -65,7 +65,7 @@ else
         tileDir="${workDir}${tile}/"
         paramName="${tileDir}parameters_${jobTime}.json"
         nameArg="-N R_${tile}"
-        logArg="-o ${workDir}Run_${tile}_${jobTime}.txt"
+        logArg="-o ${logDir}Run_${tile}_${jobTime}.txt"
         qsub $nameArg $logArg $nodeArgs MSLSP_runTile_SCC.sh $tile $paramName $jobTime
     done < $tileList
 fi 
