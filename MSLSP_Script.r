@@ -15,8 +15,7 @@ print('')
 print('')
 
 library(sf)
-library(sp)
-library(raster)
+# library(raster)
 library(terra)
 library(imager)   #needed for efficient distance to snow calculate
 library(ncdf4)
@@ -37,6 +36,7 @@ library(WGCNA)
 library(zoo)
 
 library(RcppRoll)
+library(Rcpp)
 
 library(rjson)
 
@@ -57,10 +57,10 @@ jsonFile <- args[2]
 runLog <- args[3] 
 errorLog <- args[4] 
 
-# tile     <- "15RWN"
-# jsonFile <- "/projectnb/nasa-marsh/MSLSP/Output/15RWN/parameters_2023_02_10_20_17_18.json"
-# runLog   <- "/projectnb/nasa-marsh/MSLSP/runLogs/15RWN_instanceInfo_2023_02_10_20_17_18.txt"
-# errorLog <- "/projectnb/nasa-marsh/MSLSP/runLogs/15RWN_instanceInfo_2023_02_10_20_17_18.txt"
+# tile     <- "19TCH"
+# jsonFile <- "/projectnb/nasa-marsh/MSLSP/Output/19TCH/parameters_2023_02_11_09_04_35.json"
+# runLog   <- "/projectnb/nasa-marsh/MSLSP/runLogs/19TCH_instanceInfo_2023_02_11_09_04_35.txt"
+# errorLog <- "/projectnb/nasa-marsh/MSLSP/runLogs/19TCH_instanceInfo_2023_02_11_09_04_35.txt"
 
 #Get default parameters
 params <- fromJSON(file=jsonFile)
@@ -193,8 +193,8 @@ for (y in uniqueYrs) {
 #Get raster information from first image
 ##########################
 qaName  <-  paste0('HDF4_EOS:EOS_GRID:',imgList[1], ':Grid:QA')
-baseImage  <-  raster(qaName) #Set up base image that we'll use for outputs
-numPix  <-  baseImage@ncols*baseImage@nrows   #Get total number of pixels
+baseImage  <-  rast(qaName) #Set up base image that we'll use for outputs
+numPix  <-  ncol(baseImage)*nrow(baseImage)   #Get total number of pixels
 
 
 
@@ -239,7 +239,7 @@ if (params$setup$preprocessImagery) {
     
     #Read in slope and aspect rasters
     #IMPORTANT: Code expects units of slope and aspect to be radians * 10000
-    slope <- raster(paste0(params$dirs$imgDir,'slope_',tile,'.tif')) #Keeping this slope raster as a template for other temporary outputs
+    slope <- rast(paste0(params$dirs$imgDir,'slope_',tile,'.tif')) #Keeping this slope raster as a template for other temporary outputs
     # slopeVals <- readGDAL(paste0(params$dirs$imgDir,'slope_',tile,'.tif'),silent=T)$band1
     slopeVals <- as.integer(values(rast(paste0(params$dirs$imgDir,'slope_',tile,'.tif'))))
     slopeVals[slopeVals == 65534] = NA

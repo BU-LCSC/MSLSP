@@ -1819,7 +1819,7 @@ readLyrChunks <- function(lyr, yr, numChunks, numPix, tempDir) {
 getNetCDF_projection_info <- function(baseImage) {
 
   #Get extent, and then define pixel centers in the x and y direction
-  ext = extent(baseImage)
+  ext = ext(baseImage)
   res = res(baseImage)[1]
   if (res == 60) {res <-  10}              #Error in metadata for S10, where resolutions is written as 60m. Change to 10m.  
 
