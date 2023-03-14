@@ -2,12 +2,12 @@
   "setup":{
     
     "imgStartYr":2018,
-    "imgEndYr":2020,
+    "imgEndYr":2021,
     
     "phenStartYr":2018,
-    "phenEndYr":2020,
+    "phenEndYr":2021,
     
-    "downloadImagery":false,
+    "downloadImagery":true,
     "preprocessImagery":true,
     "runPhenology":true,
     
@@ -39,13 +39,13 @@
   
     "SCC":{
     
-    "workDir":"/projectnb/nasa-marsh/MSLSP/Output/",
-    "logDir":"/projectnb/nasa-marsh/MSLSP/runLogs/",
-    "dataDir":"/projectnb/nasa-marsh/MSLSP/Input/",
+    "workDir":"/projectnb/nasa-marsh/LCSC/MSLSP/Output/",
+    "logDir":"/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/",
+    "dataDir":"/projectnb/nasa-marsh/LCSC/MSLSP/Input/",
     "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
     "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
-    "fmaskFunction":"/projectnb/nasa-marsh/fmask_compiled/autoFmask_HLS",
+    "fmaskFunction":"/projectnb/nasa-marsh/LCSC/fmask_compiled/autoFmask_HLS",
     
     "numCores":48,
     "numChunks":480,
@@ -59,7 +59,7 @@
     
     "maskNegativeValues":true,
     
-    "doComposites":false,
+    "doComposites":true,
     
     "min_seg_amplitude":0.1,  
     "min_increase_length":30,   
