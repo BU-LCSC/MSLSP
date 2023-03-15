@@ -8,9 +8,10 @@
 module purge
 module load jq
 module load python3/3.7.7
-module load gdal
-module load grass
+module load geos/3.10.2
+module load gdal/3.4.3
 module load sqlite3/3.37.2
+# module load grass
 module load R/4.2.1
 module load rstudio/2022.07.2-576
 

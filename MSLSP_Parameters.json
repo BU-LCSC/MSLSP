@@ -1,14 +1,14 @@
 {
   "setup":{
     
-    "imgStartYr":2018,
+    "imgStartYr":2019,
     "imgEndYr":2021,
     
-    "phenStartYr":2018,
+    "phenStartYr":2019,
     "phenEndYr":2021,
     
-    "downloadImagery":true,
-    "preprocessImagery":true,
+    "downloadImagery":false,
+    "preprocessImagery":false,
     "runPhenology":true,
     
     "runFmaskSentinel":true,
