@@ -8,7 +8,7 @@
     "phenEndYr":2021,
     
     "downloadImagery":false,
-    "preprocessImagery":false,
+    "preprocessImagery":true,
     "runPhenology":true,
     
     "runFmaskSentinel":true,

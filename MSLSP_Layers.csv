@@ -10,48 +10,48 @@ calc_lyr,product_lyr,qa_lyr,short_name,long_name,units,scale,offset,data_type,va
 9,9,,EVImax,Maximum EVI2 during vegetation cycle,-,0.0001,0,Int16,0,10000,32767,Maximum EVI2 during vegetation cycle
 10,10,,EVIamp,EVI2 Amplitude during vegetation cycle ,-,0.0001,0,Int16,0,10000,32767,EVI2 Amplitude during vegetation cycle 
 11,11,,EVIarea,Integrated EVI2 during vegetation cycle ,-,0.01,0,Int16,0,32766,32767,Integrated EVI2 during vegetation cycle 
-12,12,,OGI_b2,OLI band 2 Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 15% greenness increase (OLI band 2, MSI band 2)"
-13,13,,OGI_b3,OLI band 3  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 15% greenness increase (OLI band 3, MSI band 3)"
-14,14,,OGI_b4,OLI band 4  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 15% greenness increase (OLI band 4, MSI band 4)"
-15,15,,OGI_b5,OLI band 5  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 15% greenness increase (OLI band 5, MSI band 8A)"
-16,16,,OGI_b6,OLI band 6  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 15% greenness increase (OLI band 6, MSI band 11)"
-17,17,,OGI_b7,OLI band 7  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 15% greenness increase (OLI band 7, MSI band 12)"
-18,18,,50PCGI_b2,OLI band 2 Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 50% greenness increase (OLI band 2, MSI band 2)"
-19,19,,50PCGI_b3,OLI band 3  Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 50% greenness increase (OLI band 3, MSI band 3)"
-20,20,,50PCGI_b4,OLI band 4  Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 50% greenness increase (OLI band 4, MSI band 4)"
-21,21,,50PCGI_b5,OLI band 5  Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 50% greenness increase (OLI band 5, MSI band 8A)"
-22,22,,50PCGI_b6,OLI band 6  Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 50% greenness increase (OLI band 6, MSI band 11)"
-23,23,,50PCGI_b7,OLI band 7  Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 50% greenness increase (OLI band 7, MSI band 12)"
-24,24,,OGMx_b2,OLI band 2 Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 90% greenness increase (OLI band 2, MSI band 2)"
-25,25,,OGMx_b3,OLI band 3  Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 90% greenness increase (OLI band 3, MSI band 3)"
-26,26,,OGMx_b4,OLI band 4  Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 90% greenness increase (OLI band 4, MSI band 4)"
-27,27,,OGMx_b5,OLI band 5  Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 90% greenness increase (OLI band 5, MSI band 8A)"
-28,28,,OGMx_b6,OLI band 6  Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 90% greenness increase (OLI band 6, MSI band 11)"
-29,29,,OGMx_b7,OLI band 7  Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 90% greenness increase (OLI band 7, MSI band 12)"
-30,30,,Peak_b2,OLI band 2 Reflectance [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of peak greenness (OLI band 2, MSI band 2)"
-31,31,,Peak_b3,OLI band 3  Reflectance  [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of peak greenness  (OLI band 3, MSI band 3)"
-32,32,,Peak_b4,OLI band 4  Reflectance  [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of peak greenness  (OLI band 4, MSI band 4)"
-33,33,,Peak_b5,OLI band 5  Reflectance [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of peak greenness  (OLI band 5, MSI band 8A)"
-34,34,,Peak_b6,OLI band 6  Reflectance  [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of peak greenness  (OLI band 6, MSI band 11)"
-35,35,,Peak_b7,OLI band 7  Reflectance  [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of peak greenness  (OLI band 7, MSI band 12)"
-36,36,,OGD_b2,OLI band 2 Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 10% greenness decrease (OLI band 2, MSI band 2)"
-37,37,,OGD_b3,OLI band 3  Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 10% greenness decrease (OLI band 3, MSI band 3)"
-38,38,,OGD_b4,OLI band 4  Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 10% greenness decrease (OLI band 4, MSI band 4)"
-39,39,,OGD_b5,OLI band 5  Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 10% greenness decrease (OLI band 5, MSI band 8A)"
-40,40,,OGD_b6,OLI band 6  Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 10% greenness decrease (OLI band 6, MSI band 11)"
-41,41,,OGD_b7,OLI band 7  Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 10% greenness decrease (OLI band 7, MSI band 12)"
-42,42,,50PCGD_b2,OLI band 2 Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 50% greenness decrease (OLI band 2, MSI band 2)"
-43,43,,50PCGD_b3,OLI band 3  Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 50% greenness decrease (OLI band 3, MSI band 3)"
-44,44,,50PCGD_b4,OLI band 4  Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 50% greenness decrease (OLI band 4, MSI band 4)"
-45,45,,50PCGD_b5,OLI band 5  Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 50% greenness decrease (OLI band 5, MSI band 8A)"
-46,46,,50PCGD_b6,OLI band 6  Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 50% greenness decrease (OLI band 6, MSI band 11)"
-47,47,,50PCGD_b7,OLI band 7  Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 50% greenness decrease (OLI band 7, MSI band 12)"
-48,48,,OGMn_b2,OLI band 2 Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 85% greenness decrease (OLI band 2, MSI band 2)"
-49,49,,OGMn_b3,OLI band 3  Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 85% greenness decrease (OLI band 3, MSI band 3)"
-50,50,,OGMn_b4,OLI band 4  Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 85% greenness decrease (OLI band 4, MSI band 4)"
-51,51,,OGMn_b5,OLI band 5  Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 85% greenness decrease (OLI band 5, MSI band 8A)"
-52,52,,OGMn_b6,OLI band 6  Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 85% greenness decrease (OLI band 6, MSI band 11)"
-53,53,,OGMn_b7,OLI band 7  Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 85% greenness decrease (OLI band 7, MSI band 12)"
+12,27,,OGI_b2,OLI band 2 Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 15% greenness increase (OLI band 2, MSI band 2)"
+13,28,,OGI_b3,OLI band 3  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 15% greenness increase (OLI band 3, MSI band 3)"
+14,29,,OGI_b4,OLI band 4  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 15% greenness increase (OLI band 4, MSI band 4)"
+15,30,,OGI_b5,OLI band 5  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 15% greenness increase (OLI band 5, MSI band 8A)"
+16,31,,OGI_b6,OLI band 6  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 15% greenness increase (OLI band 6, MSI band 11)"
+17,32,,OGI_b7,OLI band 7  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 15% greenness increase (OLI band 7, MSI band 12)"
+18,33,,50PCGI_b2,OLI band 2 Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 50% greenness increase (OLI band 2, MSI band 2)"
+19,34,,50PCGI_b3,OLI band 3  Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 50% greenness increase (OLI band 3, MSI band 3)"
+20,35,,50PCGI_b4,OLI band 4  Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 50% greenness increase (OLI band 4, MSI band 4)"
+21,36,,50PCGI_b5,OLI band 5  Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 50% greenness increase (OLI band 5, MSI band 8A)"
+22,37,,50PCGI_b6,OLI band 6  Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 50% greenness increase (OLI band 6, MSI band 11)"
+23,38,,50PCGI_b7,OLI band 7  Reflectance [50 Percent Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 50% greenness increase (OLI band 7, MSI band 12)"
+24,39,,OGMx_b2,OLI band 2 Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 90% greenness increase (OLI band 2, MSI band 2)"
+25,40,,OGMx_b3,OLI band 3  Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 90% greenness increase (OLI band 3, MSI band 3)"
+26,41,,OGMx_b4,OLI band 4  Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 90% greenness increase (OLI band 4, MSI band 4)"
+27,42,,OGMx_b5,OLI band 5  Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 90% greenness increase (OLI band 5, MSI band 8A)"
+28,43,,OGMx_b6,OLI band 6  Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 90% greenness increase (OLI band 6, MSI band 11)"
+29,44,,OGMx_b7,OLI band 7  Reflectance [Onset Greenness Maximum],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 90% greenness increase (OLI band 7, MSI band 12)"
+30,45,,Peak_b2,OLI band 2 Reflectance [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of peak greenness (OLI band 2, MSI band 2)"
+31,46,,Peak_b3,OLI band 3  Reflectance  [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of peak greenness  (OLI band 3, MSI band 3)"
+32,47,,Peak_b4,OLI band 4  Reflectance  [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of peak greenness  (OLI band 4, MSI band 4)"
+33,48,,Peak_b5,OLI band 5  Reflectance [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of peak greenness  (OLI band 5, MSI band 8A)"
+34,49,,Peak_b6,OLI band 6  Reflectance  [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of peak greenness  (OLI band 6, MSI band 11)"
+35,50,,Peak_b7,OLI band 7  Reflectance  [Peak Greenness],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of peak greenness  (OLI band 7, MSI band 12)"
+36,51,,OGD_b2,OLI band 2 Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 10% greenness decrease (OLI band 2, MSI band 2)"
+37,52,,OGD_b3,OLI band 3  Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 10% greenness decrease (OLI band 3, MSI band 3)"
+38,53,,OGD_b4,OLI band 4  Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 10% greenness decrease (OLI band 4, MSI band 4)"
+39,54,,OGD_b5,OLI band 5  Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 10% greenness decrease (OLI band 5, MSI band 8A)"
+40,55,,OGD_b6,OLI band 6  Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 10% greenness decrease (OLI band 6, MSI band 11)"
+41,56,,OGD_b7,OLI band 7  Reflectance [Onset Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 10% greenness decrease (OLI band 7, MSI band 12)"
+42,57,,50PCGD_b2,OLI band 2 Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 50% greenness decrease (OLI band 2, MSI band 2)"
+43,58,,50PCGD_b3,OLI band 3  Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 50% greenness decrease (OLI band 3, MSI band 3)"
+44,59,,50PCGD_b4,OLI band 4  Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 50% greenness decrease (OLI band 4, MSI band 4)"
+45,60,,50PCGD_b5,OLI band 5  Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 50% greenness decrease (OLI band 5, MSI band 8A)"
+46,61,,50PCGD_b6,OLI band 6  Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 50% greenness decrease (OLI band 6, MSI band 11)"
+47,62,,50PCGD_b7,OLI band 7  Reflectance [50 Percent Greenness Decrease],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 50% greenness decrease (OLI band 7, MSI band 12)"
+48,63,,OGMn_b2,OLI band 2 Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"Blue band reflectance on date of 85% greenness decrease (OLI band 2, MSI band 2)"
+49,64,,OGMn_b3,OLI band 3  Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"Green band reflectance on date of 85% greenness decrease (OLI band 3, MSI band 3)"
+50,65,,OGMn_b4,OLI band 4  Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"Red band reflectance on date of 85% greenness decrease (OLI band 4, MSI band 4)"
+51,66,,OGMn_b5,OLI band 5  Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"NIR band reflectance on date of 85% greenness decrease (OLI band 5, MSI band 8A)"
+52,67,,OGMn_b6,OLI band 6  Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 1 band reflectance on date of 85% greenness decrease (OLI band 6, MSI band 11)"
+53,68,,OGMn_b7,OLI band 7  Reflectance [Onset Greenness Minimum],Reflectance,0.0001,0,Int16,0,10000,32767,"SWIR 2 band reflectance on date of 85% greenness decrease (OLI band 7, MSI band 12)"
 54,,1,gupNumObs,Number of days with observations during greenup,Number,1,0,Int16,0,32766,32767,-
 55,,2,gupMaxGap,Maximum time series gap during greenup, % of segment length,1,0,Int16,0,32766,32767,-
 56,,3,gupMaxGapCountSnow,"Maximum time series gap during greenup, but count snow as good ", % of segment length,1,0,Int16,0,32766,32767,-
@@ -62,16 +62,16 @@ calc_lyr,product_lyr,qa_lyr,short_name,long_name,units,scale,offset,data_type,va
 61,,8,gdownMaxGapCountSnow,"Maximum time series gap during greendown, but count snow as good ", % of segment length,1,0,Int16,0,32766,32767,-
 62,,9,gdownMaxGapFilled,"Maximum time series gap during greendown, but count filled observations as good ", % of segment length,1,0,Int16,0,32766,32767,-
 63,,10,gdownRsq,R squared during greendown,-,0.0001,0,Int16,0,32766,32767,-
-64,,,OGI_2,Cycle 2 - Onset Greenness Increase (Date of 15% greenness increase),Day of year,1,0,Int16,-181,548,32767,Cycle 2 - Onset Greenness Increase (Date of 15% greenness increase)
-65,,,50PCGI_2,Cycle 2 - 50 Percent Greenness Increase (Date of 50% greenness increase) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - 50 Percent Greenness Increase (Date of 50% greenness increase) 
-66,,,OGMx_2,Cycle 2 - Onset Greenness Maximum (Date of 90% greenness increase) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - Onset Greenness Maximum (Date of 90% greenness increase) 
-67,,,Peak_2,Cycle 2 - Date of Cycle Peak,Day of year,1,0,Int16,1,366,32767,Cycle 2- Date of Cycle Peak
-68,,,OGD_2,Cycle 2 - Onset Greenness Decrease (Date of 10% greenness decrease) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - Onset Greenness Decrease (Date of 10% greenness decrease) 
-69,,,50PCGD_2,Cycle 2 - 50 Percent Greenness Decrease (Date of 50% greenness decrease) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - 50 Percent Greenness Decrease (Date of 50% greenness decrease) 
-70,,,OGMn_2,Cycle 2 - Onset Greenness Minimum (Date of 85% greenness decrease) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - Onset Greenness Minimum (Date of 85% greenness decrease) 
-71,,,EVImax_2,Cycle 2 - Maximum EVI2 during vegetation cycle,-,0.0001,0,Int16,0,10000,32767,Cycle 2 - Maximum EVI2 during vegetation cycle
-72,,,EVIamp_2,Cycle 2 - EVI2 Amplitude during vegetation cycle ,-,0.0001,0,Int16,0,10000,32767,Cycle 2 - EVI2 Amplitude during vegetation cycle 
-73,,,EVIarea_2,Cycle 2 - Integrated EVI2 during vegetation cycle ,-,0.01,0,Int16,0,32766,32767,Cycle 2 - Integrated EVI2 during vegetation cycle 
+64,12,,OGI_2,Cycle 2 - Onset Greenness Increase (Date of 15% greenness increase),Day of year,1,0,Int16,-181,548,32767,Cycle 2 - Onset Greenness Increase (Date of 15% greenness increase)
+65,13,,50PCGI_2,Cycle 2 - 50 Percent Greenness Increase (Date of 50% greenness increase) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - 50 Percent Greenness Increase (Date of 50% greenness increase) 
+66,14,,OGMx_2,Cycle 2 - Onset Greenness Maximum (Date of 90% greenness increase) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - Onset Greenness Maximum (Date of 90% greenness increase) 
+67,15,,Peak_2,Cycle 2 - Date of Cycle Peak,Day of year,1,0,Int16,1,366,32767,Cycle 2- Date of Cycle Peak
+68,16,,OGD_2,Cycle 2 - Onset Greenness Decrease (Date of 10% greenness decrease) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - Onset Greenness Decrease (Date of 10% greenness decrease) 
+69,17,,50PCGD_2,Cycle 2 - 50 Percent Greenness Decrease (Date of 50% greenness decrease) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - 50 Percent Greenness Decrease (Date of 50% greenness decrease) 
+70,18,,OGMn_2,Cycle 2 - Onset Greenness Minimum (Date of 85% greenness decrease) ,Day of year,1,0,Int16,-181,548,32767,Cycle 2 - Onset Greenness Minimum (Date of 85% greenness decrease) 
+71,19,,EVImax_2,Cycle 2 - Maximum EVI2 during vegetation cycle,-,0.0001,0,Int16,0,10000,32767,Cycle 2 - Maximum EVI2 during vegetation cycle
+72,20,,EVIamp_2,Cycle 2 - EVI2 Amplitude during vegetation cycle ,-,0.0001,0,Int16,0,10000,32767,Cycle 2 - EVI2 Amplitude during vegetation cycle 
+73,21,,EVIarea_2,Cycle 2 - Integrated EVI2 during vegetation cycle ,-,0.01,0,Int16,0,32766,32767,Cycle 2 - Integrated EVI2 during vegetation cycle 
 74,,,OGI_b2_2,Cycle 2 - OLI band 2 Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Cycle 2 - Blue band reflectance on date of 15% greenness increase (OLI band 2, MSI band 2)"
 75,,,OGI_b3_2,Cycle 2 - OLI band 3  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Cycle 2 - Green band reflectance on date of 15% greenness increase (OLI band 3, MSI band 3)"
 76,,,OGI_b4_2,Cycle 2 - OLI band 4  Reflectance [Onset Greenness Increase],Reflectance,0.0001,0,Int16,0,10000,32767,"Cycle 2 - Red band reflectance on date of 15% greenness increase (OLI band 4, MSI band 4)"
@@ -124,13 +124,13 @@ calc_lyr,product_lyr,qa_lyr,short_name,long_name,units,scale,offset,data_type,va
 123,,18,gdownMaxGapCountSnow_2,"Maximum time series gap during greendown, but count snow as good ", % of segment length,1,0,Int16,0,32766,32767,-
 124,,19,gdownMaxGapFilled_2,"Maximum time series gap during greendown, but count filled observations as good ", % of segment length,1,0,Int16,0,32766,32767,-
 125,,20,gdownRsq_2,R squared during greendown,-,0.0001,0,Int16,0,32766,32767,-
-126,,21,numObs,Number of days with clear observations in calendar year,Number,1,0,Int16,0,366,32767,Number of clear observations in calendar year
+126,22,21,numObs,Number of days with clear observations in calendar year,Number,1,0,Int16,0,366,32767,Number of clear observations in calendar year
 127,,22,numObsCountSnow,Number of days with clear and snow filled observations in calendar year ,Number,1,0,Int16,0,366,32767,Number of clear and snow filled observations in calendar year 
 128,,23,maxGap,Maximum gap between clear obsevations in calendar year,Days,1,0,Int16,0,366,32767,Maximum gap between clear obsevations in calendar year
 129,,24,maxGapCountSnow,Maximum gap between clear or snow filled observations in calendar year,Days,1,0,Int16,0,366,32767,Maximum gap between clear or snow filled observations in calendar year
-,54,,gupQA,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
-,55,,gdownQA,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
-,,,gupQA_2,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
-,,,gdownQA_2,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
-,56,,overallQA,Overall Quality Assurance for Cycle 1,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 1
+,23,,gupQA,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
+,24,,gdownQA,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
+,25,,gupQA_2,Quality Assurance for Greenup Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greenup Segment
+,26,,gdownQA_2,Quality Assurance for Greendown Segment,-,1,0,Int16,1,10,32767,Quality Assurance for Greendown Segment
+,,,overallQA,Overall Quality Assurance for Cycle 1,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 1
 ,,,overallQA_2,Overall Quality Assurance for Cycle 2,,1,0,Int16,1,10,32767,Overall Quality Assurance for Cycle 2
