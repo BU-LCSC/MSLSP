@@ -57,10 +57,10 @@ jsonFile <- args[2]
 runLog <- args[3] 
 errorLog <- args[4] 
 
-# tile     <- "15RXN"
-# jsonFile <- "/projectnb/nasa-marsh/LCSC/MSLSP/Output/15RXN/parameters_2023_03_15_10_05_45.json"
-# runLog   <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RXN_instanceInfo_2023_03_15_10_05_45.txt"
-# errorLog <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RXN_errorLog_2023_03_15_10_05_45.txt"
+tile     <- "15RWN"
+jsonFile <- "/projectnb/nasa-marsh/LCSC/MSLSP/Output/15RWN/parameters_2023_03_16_11_25_43.json"
+runLog   <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_instanceInfo_2023_03_16_11_25_43.txt"
+errorLog <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_errorLog_2023_03_16_11_25_43.txt"
 
 #Get default parameters
 params <- fromJSON(file=jsonFile)
