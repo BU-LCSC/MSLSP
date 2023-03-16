@@ -1,13 +1,13 @@
 {
   "setup":{
     
-    "imgStartYr":2019,
-    "imgEndYr":2021,
+    "imgStartYr":2018,
+    "imgEndYr":2020,
     
-    "phenStartYr":2019,
-    "phenEndYr":2021,
+    "phenStartYr":2018,
+    "phenEndYr":2020,
     
-    "downloadImagery":false,
+    "downloadImagery":true,
     "preprocessImagery":true,
     "runPhenology":true,
     

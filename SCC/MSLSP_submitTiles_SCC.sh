@@ -2,7 +2,7 @@
 module load jq
 
 parameters="/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
-tileList="tileLists/cr_LA.txt"
+tileList="tileLists/seamore.txt"
 
 numCores=$( jq .SCC.numCores $parameters )
 workDir=$( jq --raw-output .SCC.workDir $parameters )
