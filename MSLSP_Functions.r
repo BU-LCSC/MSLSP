@@ -1,6 +1,6 @@
 #Functions for MuSLI_LSP - Multisource Land Imaging of Land Surface Phenology
 
-#Functions written by Josh Gray, Douglas Bolton, and Eli Melaas
+#Functions written by Josh Gray, Douglas Bolton, ,Eli Melaas, and Minkyu Moon
 ###############
 
 
@@ -30,12 +30,12 @@ return(boundaries)
 #Derive image mask and snow mask from QA flags
 #image mask includes cloud, cloud shadow, adjacent cloud, and snow pixels
 #snow mask includes snow pixels only. 
-#Douglas Bolton
+#Douglas Bolton, edited by Minkyu Moon
 #---------------------------------------------------------------------
 getMasks <-function(qaName) {
   
   #Read in QA
-  qaM <- readGDAL(qaName,silent=T)$band1
+  qaM <- as.integer(values(rast(qaName)))
 
   #Make empty masks
   #Must have two separate masks, because pixels can have multiple labels (e.g., snow in fmask, cloud in lasrc)
@@ -96,11 +96,10 @@ ApplyMask_QA <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, 
   ################################################################################
     qaName = imgName
     maskList <- getMasks(qaName)
-    mask <- maskList[[1]]
-    snow <- maskList[[2]]
+    mask <- as.logical(maskList[[1]])
+    snow <- as.logical(maskList[[2]])
     snow[waterMask] <- FALSE   #Remove snow flags that are over water
     remove(maskList)
-  
   
   #Open the image bands
   ##############################################################################
@@ -108,12 +107,15 @@ ApplyMask_QA <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, 
   if (sensor == 'L30') {
       bNames <- c('B02','B03','B04','B05','B06','B07')
       bands <- matrix(as.integer(0),length(mask),length(bNames))
-      for (i in 1:length(bNames)) {bands[,i] <- values(raster(paste0(imgDir,'/',imgName_strip,'.',bNames[i],'.tif')))*10000}
+      # for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
+      for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(rast(paste0(theBase, bNames[i])))*10000)}
 
   } else if (sensor == 'S30') {
      bNames <- c('B02','B03','B04','B8A','B11','B12','B05','B06','B07')
      bands <- matrix(as.integer(0),length(mask),length(bNames))
-     for (i in 1:length(bNames)) {bands[,i] <- values(raster(paste0(imgDir,'/',imgName_strip,'.',bNames[i],'.tif')))*10000}
+
+      # for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
+     for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(rast(paste0(theBase, bNames[i])))*10000)}
      
   } else if (sensor == 'S10') {
     #Need to get all bands to 10m first. Using Broad band NIR (10m) instead of Narrow (20m)
@@ -128,8 +130,10 @@ ApplyMask_QA <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, 
                    paste0(tifBase,bNames,'.tif'))
 
     bands <- matrix(as.integer(0),length(mask),length(fullNames))
-    for (i in 1:length(fullNames)) {bands[,i] <- as.integer(readGDAL(fullNames[i],silent=T)$band1*10000)}
 
+    # for (i in 1:length(fullNames)) {bands[,i] <- as.integer(readGDAL(fullNames[i],silent=T)$band1*10000)}
+    for (i in 1:length(fullNames)) {bands[,i] <- as.integer(values(rast(fullNames[i]))*10000)}
+    
     for (bName in bNames) {file.remove(paste0(tifBase,bName,'.tif'))}
 
   }
@@ -291,12 +295,18 @@ runTopoCorrection <- function(imgName, groups, slopeVals, aspectVals, chunkStart
 
   #Get sun zenith and azimuth.
   #Some L8 scenes will have two values (two L8 images as inputs). We will take the average of these two values
-  imgDir <- paste0(unlist(strsplit(imgName,'/'))[1:13],collapse='/')
-  info <- unlist(xmlToList(paste0(imgDir,'/',imgName_strip,'.cmr.xml')))
-  zMean <- as.numeric(info[which(info=='MEAN_SUN_ZENITH_ANGLE')[1]+1])
+
+  # info <- gdalinfo(imgName)
+  info <- gdal_metadata(imgName)
+  line <- info[pmatch('MEAN_SUN_ZENITH_ANGLE',info)]
+  line <- unlist(strsplit(line,'='))[2]
+  zMean <- mean(as.numeric(unlist(strsplit(line,','))))
   sunzenith <- (pi/180) * zMean
   
-  aMean <- zMean <- as.numeric(info[which(info=='MEAN_SUN_AZIMUTH_ANGLE')[1]+1])
+  line = info[pmatch('MEAN_SUN_AZIMUTH_ANGLE',info)]
+  line <- unlist(strsplit(line,'='))[2]
+  aMean <- mean(as.numeric(unlist(strsplit(line,','))))
+
   sunazimuth <- (pi/180) * aMean
   
   numChunks <- length(chunkEnd)
@@ -334,7 +344,7 @@ runTopoCorrection <- function(imgName, groups, slopeVals, aspectVals, chunkStart
                                            sunzenith = sunzenith, sunazimuth=sunazimuth,topo_pars,plotBaseName)
 
     #NDMI check
-    #Now that we have topo corrected the imagery, let's check for potentail snow....
+    #Now that we have topo corrected the imagery, let's check for potential snow....
     #If NDMI > 0.5 AND the pixel is within 5 km of detected snow, then mask pixel
     if (sum(snow) > 0) {
       additional_snow_mask <- runSnowScreen(snow,corr[,4],corr[,5],params)
@@ -1720,7 +1730,7 @@ readLyrChunks <- function(lyr, yr, numChunks, numPix, tempDir) {
 getNetCDF_projection_info <- function(baseImage) {
 
   #Get extent, and then define pixel centers in the x and y direction
-  ext = extent(baseImage)
+  ext = ext(baseImage)
   res = res(baseImage)[1]
   if (res == 60) {res <-  10}              #Error in metadata for S10, where resolutions is written as 60m. Change to 10m.  
 
@@ -1732,7 +1742,8 @@ getNetCDF_projection_info <- function(baseImage) {
   dimy = ncdim_def(name = 'y', longname = 'y coordinate', units='m', vals = rev(as.double(y)))
   
   #Get projection in wkt format
-  wkt <- showWKT(projection(baseImage))  
+  # wkt <- showWKT(projection(baseImage)) 
+  wkt <- st_as_text(st_crs(baseImage))
   
   #Need to pull the central meridian from the wkt 
   spt <- unlist(strsplit(gsub(']','',wkt),','))

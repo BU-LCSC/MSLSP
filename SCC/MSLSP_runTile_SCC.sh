@@ -6,11 +6,14 @@
 #######
 #Load required modules
 module purge
-module load R/3.6.0
-module load geos/3.7.0
-module load rstudio/1.2.1335
-module load qgis/3.4.2
-module load gdal/2.3.2
+module load jq
+module load python3/3.7.7
+module load geos/3.10.2
+module load gdal/3.4.3
+module load sqlite3/3.37.2
+# module load grass
+module load R/4.2.1
+module load rstudio/2022.07.2-576
 
 
 tile=$1
@@ -88,9 +91,9 @@ fi
 runLog="${logDir}${tile}_instanceInfo_${timeStamp}.txt"
 errorLog="${logDir}${tile}_errorLog_${timeStamp}.txt"
 
-echo "tile:${tile}"  >"${runLog}"
-echo "time:${timeStamp}"  >>"${runLog}"
-echo "run:SCC"  >>"${runLog}"
+echo "tile:${tile}"           >>"${runLog}"
+echo "time:${timeStamp}"      >>"${runLog}"
+echo "run:SCC"                >>"${runLog}"
 echo "num-cores:${numCores}"  >>"${runLog}"
 
 #Run the script

@@ -1,11 +1,11 @@
 {
   "setup":{
     
-    "imgStartYr":2016,
-    "imgEndYr":2022,
+    "imgStartYr":2018,
+    "imgEndYr":2020,
     
-    "phenStartYr":2017,
-    "phenEndYr":2021,
+    "phenStartYr":2018,
+    "phenEndYr":2020,
     
     "downloadImagery":false,
     "preprocessImagery":true,
@@ -38,9 +38,9 @@
   
     "SCC":{
     
-    "workDir":"/projectnb/modislc/users/mkmoon/cdsa/mslsp/output/",
-    "logDir":"/projectnb/modislc/users/mkmoon/cdsa/mslsp/runLogs/",
-    "dataDir":"/projectnb/modislc/users/mkmoon/cdsa/mslsp/input/",
+    "workDir":"/projectnb/nasa-marsh/LCSC/MSLSP/Output/",
+    "logDir":"/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/",
+    "dataDir":"/projectnb/nasa-marsh/LCSC/MSLSP/Input/",
     "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
     "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
@@ -57,7 +57,7 @@
     
     "maskNegativeValues":true,
     
-    "doComposites":false,
+    "doComposites":true,
     
     "min_seg_amplitude":0.1,  
     "min_increase_length":30,   

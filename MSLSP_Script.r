@@ -14,12 +14,18 @@ print('Loading packages')
 print('')
 print('')
 
-library(raster)
-library(rgdal)
-library(gdalUtils)
-library(rgeos)
+library(sf)
+# library(raster)
+library(terra)
 library(imager)   #needed for efficient distance to snow calculate
 library(ncdf4)
+
+# library(raster)
+# library(rgdal)
+# library(gdalUtils)
+# library(rgeos)
+# library(imager)   #needed for efficient distance to snow calculate
+# library(ncdf4)
 
 library(iterators)
 library(foreach)
@@ -30,6 +36,7 @@ library(WGCNA)
 library(zoo)
 
 library(RcppRoll)
+library(Rcpp)
 
 library(rjson)
 library(XML)
@@ -56,6 +63,11 @@ tile <- args[1]
 jsonFile <- args[2]
 runLog <- args[3] 
 errorLog <- args[4] 
+
+# tile     <- "15RWN"
+# jsonFile <- "/projectnb/nasa-marsh/LCSC/MSLSP/Output/15RWN/parameters_2023_03_16_11_25_43.json"
+# runLog   <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_instanceInfo_2023_03_16_11_25_43.txt"
+# errorLog <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_errorLog_2023_03_16_11_25_43.txt"
 
 #Get default parameters
 params <- fromJSON(file=jsonFile)
@@ -185,12 +197,9 @@ for (y in uniqueYrs) {
 
 #Get raster information from first image
 ##########################
-# qaName  <-  paste0('HDF4_EOS:EOS_GRID:',imgList[1], ':Grid:QA')
-qaName  <-  imgList[1] 
-ref_info <- gdalinfo(qaName,proj4=TRUE,raw_output=FALSE)
-ts <- c(ref_info$columns,ref_info$rows) #Get image rows and columns
-numPix  <-  ts[1] * ts[2]   #Get total number of pixels
-baseImage  <-  raster(qaName) #Set up base image that we'll use for outputs
+qaName  <-  paste0('HDF4_EOS:EOS_GRID:',imgList[1], ':Grid:QA')
+baseImage  <-  rast(qaName) #Set up base image that we'll use for outputs
+numPix  <-  ncol(baseImage)*nrow(baseImage)   #Get total number of pixels
 
 #Sort out chunk boundaries
 #################
@@ -201,17 +210,17 @@ numPixPerChunk <- chunkEnd - chunkStart + 1  #Number of pixels in each chunk
 
 
 #Read in water mask
-water <- readGDAL(paste0(params$dirs$imgDir,'water_',tile,'.tif'),silent=T)$band1
+water <- as.integer(values(rast(paste0(params$dirs$imgDir,'water_',tile,'.tif'))))
 waterMask <- water == 2 | water == 0    #Mask water and zero (zero = ocean far from shore)
 remove(water)
+
+
+
 #STEP 1 - Preprocess images
 #####################################################
 #####################################################
 if (params$setup$preprocessImagery) {  
-  
-  ## Note: Fmask has been provided as a default from HLS v2.0, so no fmask on SCC
-  if (params$setup$AWS_or_SCC == 'SCC') {registerDoMC(cores=(params$setup$numCores-2))}
-  
+
   #Apply mask and write out chunked images. 
   imgLog <- foreach(j=1:length(imgList),.combine=c) %dopar% {
                 log <- try({ApplyMask_QA(imgList[j], tile, waterMask, chunkStart, chunkEnd, params)},silent=T)
@@ -230,12 +239,14 @@ if (params$setup$preprocessImagery) {
     
     #Read in slope and aspect rasters
     #IMPORTANT: Code expects units of slope and aspect to be radians * 10000
-    slope <- raster(paste0(params$dirs$imgDir,'slope_',tile,'.tif')) #Keeping this slope raster as a template for other temporary outputs
-    slopeVals <- readGDAL(paste0(params$dirs$imgDir,'slope_',tile,'.tif'),silent=T)$band1
+    slope <- rast(paste0(params$dirs$imgDir,'slope_',tile,'.tif')) #Keeping this slope raster as a template for other temporary outputs
+    # slopeVals <- readGDAL(paste0(params$dirs$imgDir,'slope_',tile,'.tif'),silent=T)$band1
+    slopeVals <- as.integer(values(rast(paste0(params$dirs$imgDir,'slope_',tile,'.tif'))))
     slopeVals[slopeVals == 65534] = NA
     slopeVals = slopeVals / 10000
     
-    aspectVals = readGDAL(paste0(params$dirs$imgDir,'aspect_',tile,'.tif'),silent=T)$band1
+    # aspectVals = readGDAL(paste0(params$dirs$imgDir,'aspect_',tile,'.tif'),silent=T)$band1
+    aspectVals = as.integer(values(rast(paste0(params$dirs$imgDir,'aspect_',tile,'.tif'))))
     aspectVals[aspectVals == 65534] = NA
     aspectVals = aspectVals / 10000
     
