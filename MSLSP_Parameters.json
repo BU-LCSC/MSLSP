@@ -47,8 +47,8 @@
     "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
     "fmaskFunction":"/projectnb/nasa-marsh/LCSC/fmask_compiled/autoFmask_HLS",
     
-    "numCores":48,
-    "numChunks":480,
+    "numCores":28,
+    "numChunks":196,
     "runS10":false
 
   },
