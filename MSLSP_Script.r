@@ -39,7 +39,7 @@ library(RcppRoll)
 library(Rcpp)
 
 library(rjson)
-
+library(XML)
 
 
 print('----------------------------------------------------------------------------------------------')
@@ -51,6 +51,13 @@ print('')
 
 #Read in arguments
 args <- commandArgs(trailingOnly=T)
+
+# setwd('/projectnb/modislc/users/mkmoon/cdsa/mslsp/output/06VUR')
+# args <- c('06VUR',
+#           'parameters_2023_01_05_17_07_06.json',
+#           '06VUR_instanceInfo__2023_01_05_17_07_06.txt',
+#           '06VUR_errorLog__2023_01_05_17_07_06.txt')
+
 print(args)
 tile <- args[1]
 jsonFile <- args[2]
@@ -69,13 +76,11 @@ params <- fromJSON(file=jsonFile)
 if (params$setup$AWS_or_SCC == 'SCC') {
   params$setup$rFunctions <- params$SCC$rFunctions
   params$setup$productTable <- params$SCC$productTable
-  params$setup$fmaskFunction <- params$SCC$fmaskFunction 
   params$setup$numCores <- params$SCC$numCores
   params$setup$numChunks <- params$SCC$numChunks
 } else {
   params$setup$rFunctions <- params$AWS$rFunctions
   params$setup$productTable <- params$AWS$productTable
-  params$setup$fmaskFunction <- params$AWS$fmaskFunction
   params$setup$numCores <- params$AWS$numCores
   params$setup$numChunks <- params$AWS$numChunks}
 
@@ -144,7 +149,7 @@ phenYrs <- phenStartYr:phenEndYr     #What years will we calculate phenology for
 
 #Get full image list
 ###########
-imgList <- list.files(path=params$dirs$imgDir, pattern=glob2rx("HLS*.hdf"), full.names=T)
+imgList <- list.files(path=params$dirs$imgDir, pattern=glob2rx("HLS*Fmask.tif"), full.names=T, recursive=T)
 
 #Get the year and doy of each image. Restrict to time period of interest
 ##########################
@@ -153,7 +158,7 @@ yrdoy = as.numeric(matrix(NA,length(imgList),1))
 for (i in 1:length(imgList)) {
   imgName_strip = tail(unlist(strsplit(imgList[i],'/')),n = 1)
   sensor[i] <- unlist(strsplit(imgName_strip,'.',fixed = T))[2]
-  yrdoy[i]= unlist(strsplit(imgName_strip,'.',fixed = T))[4]}
+  yrdoy[i]= substr(unlist(strsplit(imgName_strip,'.',fixed = T))[4],1,7)}
 doys <- as.numeric(format(as.Date(strptime(yrdoy, format="%Y%j")),'%j'))
 years <- as.numeric(format(as.Date(strptime(yrdoy, format="%Y%j")),'%Y'))
 
@@ -196,8 +201,6 @@ qaName  <-  paste0('HDF4_EOS:EOS_GRID:',imgList[1], ':Grid:QA')
 baseImage  <-  rast(qaName) #Set up base image that we'll use for outputs
 numPix  <-  ncol(baseImage)*nrow(baseImage)   #Get total number of pixels
 
-
-
 #Sort out chunk boundaries
 #################
 boundaries <- chunkBoundaries(numPix,numChunks) #Chunk image for processing
@@ -217,14 +220,11 @@ remove(water)
 #####################################################
 #####################################################
 if (params$setup$preprocessImagery) {  
-  
-  #It appears that fmask overuses resources on SCC, so reduce by a few cores if running on SCC to prevent job from being killed
-  if (params$setup$AWS_or_SCC == 'SCC') {registerDoMC(cores=(params$setup$numCores-4))}
-  
-  #Apply mask and write out chunked images. Currently using the QA_and_Fmask version  (QA for Landsat, Fmask 4.0 for Sentinel)
+
+  #Apply mask and write out chunked images. 
   imgLog <- foreach(j=1:length(imgList),.combine=c) %dopar% {
-                log <- try({ApplyMask_QA_and_Fmask(imgList[j], tile, waterMask, chunkStart, chunkEnd, params)},silent=T)
-                if (inherits(log, 'try-error')) {cat(paste('ApplyMask_QA_and_Fmask: Error for', imgList[j],'\n'), file=errorLog, append=T)}  #If there's an error, keep going, but write to error log
+                log <- try({ApplyMask_QA(imgList[j], tile, waterMask, chunkStart, chunkEnd, params)},silent=T)
+                if (inherits(log, 'try-error')) {cat(paste('ApplyMask_QA: Error for', imgList[j],'\n'), file=errorLog, append=T)}  #If there's an error, keep going, but write to error log
                 }   
   
   #Topographic Correction of images
