@@ -57,10 +57,10 @@ jsonFile <- args[2]
 runLog <- args[3] 
 errorLog <- args[4] 
 
-tile     <- "15RWN"
-jsonFile <- "/projectnb/nasa-marsh/LCSC/MSLSP/Output/15RWN/parameters_2023_03_16_11_25_43.json"
-runLog   <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_instanceInfo_2023_03_16_11_25_43.txt"
-errorLog <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_errorLog_2023_03_16_11_25_43.txt"
+# tile     <- "15RWN"
+# jsonFile <- "/projectnb/nasa-marsh/LCSC/MSLSP/Output/15RWN/parameters_2023_03_16_11_25_43.json"
+# runLog   <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_instanceInfo_2023_03_16_11_25_43.txt"
+# errorLog <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_errorLog_2023_03_16_11_25_43.txt"
 
 #Get default parameters
 params <- fromJSON(file=jsonFile)
@@ -219,7 +219,7 @@ remove(water)
 if (params$setup$preprocessImagery) {  
   
   #It appears that fmask overuses resources on SCC, so reduce by a few cores if running on SCC to prevent job from being killed
-  if (params$setup$AWS_or_SCC == 'SCC') {registerDoMC(cores=(params$setup$numCores-2))}
+  if (params$setup$AWS_or_SCC == 'SCC') {registerDoMC(cores=(params$setup$numCores-4))}
   
   #Apply mask and write out chunked images. Currently using the QA_and_Fmask version  (QA for Landsat, Fmask 4.0 for Sentinel)
   imgLog <- foreach(j=1:length(imgList),.combine=c) %dopar% {
