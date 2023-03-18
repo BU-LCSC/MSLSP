@@ -86,7 +86,7 @@ ApplyMask_QA <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, 
   pheno_pars <- params$phenology_parameters   #Pull phenology parameters
   
   #Get sensor, names sorted
-  imgName_strip = paste0(unlist(strsplit(tail(unlist(strsplit(imgName,'/')),n = 1),'.',fixed=T))[1:6],collapse='.')
+  imgName_strip = tail(unlist(strsplit(imgName,'/')),n = 1)
   sensor = unlist(strsplit(imgName_strip,'.',fixed = T))[2]
   tileTxt = unlist(strsplit(imgName_strip,'.',fixed = T))[3]
   date = substr(unlist(strsplit(imgName_strip,'.',fixed = T))[4],1,7)
@@ -94,7 +94,7 @@ ApplyMask_QA <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, 
   
   # Note: Since HLS v2.0, S30 provides Fmask layer, so do not need to run Fmask for Sentienl - 1/5/2023
   ################################################################################
-    qaName = imgName
+    qaName = paste0(imgName,'/',imgName_strip,'.Fmask.tif')
     maskList <- getMasks(qaName)
     mask <- as.logical(maskList[[1]])
     snow <- as.logical(maskList[[2]])
@@ -103,19 +103,19 @@ ApplyMask_QA <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, 
   
   #Open the image bands
   ##############################################################################
-  imgDir <- paste0(unlist(strsplit(imgName,'/'))[1:13],collapse='/')
+  theBase <- paste0(imgName,'/',imgName_strip,'.')
   if (sensor == 'L30') {
       bNames <- c('B02','B03','B04','B05','B06','B07')
       bands <- matrix(as.integer(0),length(mask),length(bNames))
       # for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
-      for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(rast(paste0(theBase, bNames[i])))*10000)}
+      for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(rast(paste0(theBase, bNames[i],'.tif')))*10000)}
 
   } else if (sensor == 'S30') {
      bNames <- c('B02','B03','B04','B8A','B11','B12','B05','B06','B07')
      bands <- matrix(as.integer(0),length(mask),length(bNames))
 
       # for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
-     for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(rast(paste0(theBase, bNames[i])))*10000)}
+     for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(rast(paste0(theBase, bNames[i],'.tif')))*10000)}
      
   } else if (sensor == 'S10') {
     #Need to get all bands to 10m first. Using Broad band NIR (10m) instead of Narrow (20m)
@@ -287,7 +287,7 @@ runTopoCorrection <- function(imgName, groups, slopeVals, aspectVals, chunkStart
   topo_pars <- params$topocorrection_parameters
   
   #Get sensor, names sorted
-  imgName_strip = paste0(unlist(strsplit(tail(unlist(strsplit(imgName,'/')),n = 1),'.',fixed=T))[1:6],collapse='.')
+  imgName_strip = tail(unlist(strsplit(imgName,'/')),n = 1)
   sensor <- unlist(strsplit(imgName_strip,'.',fixed = T))[2]
   tileTxt <- unlist(strsplit(imgName_strip,'.',fixed = T))[3]
   date = substr(unlist(strsplit(imgName_strip,'.',fixed = T))[4],1,7)
@@ -297,7 +297,7 @@ runTopoCorrection <- function(imgName, groups, slopeVals, aspectVals, chunkStart
   #Some L8 scenes will have two values (two L8 images as inputs). We will take the average of these two values
 
   # info <- gdalinfo(imgName)
-  info <- gdal_metadata(imgName)
+  info <- gdal_metadata(paste0(imgName,'/',imgName_strip,'.Fmask.tif'))
   line <- info[pmatch('MEAN_SUN_ZENITH_ANGLE',info)]
   line <- unlist(strsplit(line,'='))[2]
   zMean <- mean(as.numeric(unlist(strsplit(line,','))))

@@ -1,4 +1,4 @@
-#Douglas Bolton, Boston University
+#Douglas Bolton, and Minkyu Moon, Boston University
 #Main script for running HLS Land Surface Phenology
 #######################################################################################
 
@@ -15,17 +15,9 @@ print('')
 print('')
 
 library(sf)
-# library(raster)
 library(terra)
 library(imager)   #needed for efficient distance to snow calculate
 library(ncdf4)
-
-# library(raster)
-# library(rgdal)
-# library(gdalUtils)
-# library(rgeos)
-# library(imager)   #needed for efficient distance to snow calculate
-# library(ncdf4)
 
 library(iterators)
 library(foreach)
@@ -51,23 +43,18 @@ print('')
 
 #Read in arguments
 args <- commandArgs(trailingOnly=T)
-
-# setwd('/projectnb/modislc/users/mkmoon/cdsa/mslsp/output/06VUR')
-# args <- c('06VUR',
-#           'parameters_2023_01_05_17_07_06.json',
-#           '06VUR_instanceInfo__2023_01_05_17_07_06.txt',
-#           '06VUR_errorLog__2023_01_05_17_07_06.txt')
-
 print(args)
 tile <- args[1]
 jsonFile <- args[2]
 runLog <- args[3] 
 errorLog <- args[4] 
 
-# tile     <- "15RWN"
-# jsonFile <- "/projectnb/nasa-marsh/LCSC/MSLSP/Output/15RWN/parameters_2023_03_16_11_25_43.json"
-# runLog   <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_instanceInfo_2023_03_16_11_25_43.txt"
-# errorLog <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_errorLog_2023_03_16_11_25_43.txt"
+
+# tile <- '05WPS'
+# jsonFile <- '/projectnb/modislc/users/mkmoon/csda/mslsp/output/05WPS/parameters_2023_03_17_23_04_41.json'
+# runLog <- '/projectnb/modislc/users/mkmoon/csda/mslsp/runLogs/05WPS_instanceInfo_2023_03_17_23_04_41.txt'
+# errorLog <- '/projectnb/modislc/users/mkmoon/csda/mslsp/runLogs/05WPS_errorLog_2023_03_17_23_04_41.txt'
+
 
 #Get default parameters
 params <- fromJSON(file=jsonFile)
@@ -149,22 +136,24 @@ phenYrs <- phenStartYr:phenEndYr     #What years will we calculate phenology for
 
 #Get full image list
 ###########
-imgList <- list.files(path=params$dirs$imgDir, pattern=glob2rx("HLS*Fmask.tif"), full.names=T, recursive=T)
+# imgList <- list.files(path=params$dirs$imgDir, pattern=glob2rx("HLS*Fmask.tif"), full.names=T, recursive=T)
+imgList <- list.dirs(path=params$dirs$imgDir, full.names=T)[-1]
 
 #Get the year and doy of each image. Restrict to time period of interest
 ##########################
-sensor <- matrix(NA,length(imgList),1)
-yrdoy = as.numeric(matrix(NA,length(imgList),1))
+sensor         <- matrix(NA,length(imgList),1)
+yrdoy          <- as.numeric(matrix(NA,length(imgList),1))
+imgName_strip  <- matrix(NA,length(imgList),1)
 for (i in 1:length(imgList)) {
-  imgName_strip = tail(unlist(strsplit(imgList[i],'/')),n = 1)
-  sensor[i] <- unlist(strsplit(imgName_strip,'.',fixed = T))[2]
-  yrdoy[i]= substr(unlist(strsplit(imgName_strip,'.',fixed = T))[4],1,7)}
+  imgName_strip[i] = tail(unlist(strsplit(imgList[i],'/')),n = 1)
+  sensor[i] <- unlist(strsplit(imgName_strip[i],'.',fixed = T))[2]
+  yrdoy[i]= substr(unlist(strsplit(imgName_strip[i],'.',fixed = T))[4],1,7)}
 doys <- as.numeric(format(as.Date(strptime(yrdoy, format="%Y%j")),'%j'))
 years <- as.numeric(format(as.Date(strptime(yrdoy, format="%Y%j")),'%Y'))
 
 keep <- (years >= (imgStartYr - 1)) & (years <= (imgEndYr + 1))  #Only keep imagery +/- 1 (need 6 month buffer)
 
-#Deterime which data to keep
+#Determine which data to keep
 if (!params$setup$includeLandsat) {drop <- sensor == 'L30'; keep[drop] <- FALSE}
 if (!params$setup$includeSentinel) {drop <- sensor == 'S30'; keep[drop] <- FALSE}  
   
@@ -173,8 +162,6 @@ yrdoy <- yrdoy[keep]
 doys <- doys[keep]
 years <- years[keep]
 sensor <- sensor[keep]
-
-
 
 
 uniqueYrs <- sort(unique(years))  #What years do we actually have imagery for? (imgYears +/- 1 for buffer years)
@@ -197,8 +184,7 @@ for (y in uniqueYrs) {
 
 #Get raster information from first image
 ##########################
-qaName  <-  paste0('HDF4_EOS:EOS_GRID:',imgList[1], ':Grid:QA')
-baseImage  <-  rast(qaName) #Set up base image that we'll use for outputs
+baseImage  <-  rast(paste0(imgList[1],'/',imgName_strip[1],'.Fmask.tif')) #Set up base image that we'll use for outputs
 numPix  <-  ncol(baseImage)*nrow(baseImage)   #Get total number of pixels
 
 #Sort out chunk boundaries

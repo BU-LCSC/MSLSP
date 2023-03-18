@@ -2,7 +2,7 @@
 module load jq
 
 parameters="/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
-tileList="tileLists/cdsa.txt"
+tileList="tileLists/seamore.txt"
 
 numCores=$( jq .SCC.numCores $parameters )
 workDir=$( jq --raw-output .SCC.workDir $parameters )
@@ -16,7 +16,7 @@ mkdir -p $logDir
 if $(jq .SCC.runS10 $parameters )
 then
     baseDir="${dataDir}S10/"
-    nodeArgs="-l h_rt=24:00:00 -l mem_per_core=16G -pe mpi_16_tasks_per_node ${numCores}"
+    nodeArgs="-l h_rt=24:00:00 -l mem_per_core=16G -pe omp ${numCores}"
 else
     baseDir="${dataDir}HLS30/"
     nodeArgs="-l h_rt=12:00:00 -pe omp ${numCores}"
@@ -45,8 +45,8 @@ then
         nameArg="-N DL_${tile}"
         logArg_download="-o ${logDir}Download_${tile}_${jobTime}.txt"
         downloadArg="-l download"
-        imgStartYr=$(( $( jq .setup.imgStartYr $parameters )))  
-        imgEndYr=$(( $( jq .setup.imgEndYr $parameters )))      
+        imgStartYr=$(( $( jq .setup.imgStartYr $parameters ) - 1 ))  
+        imgEndYr=$(( $( jq .setup.imgEndYr $parameters ) + 1 ))      
         qsub $nameArg $logArg_download $downloadArg runDownloadHLS.sh $tile $baseDir $imgStartYr $imgEndYr
     done < $tileList
 

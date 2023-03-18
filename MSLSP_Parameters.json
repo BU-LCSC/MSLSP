@@ -1,11 +1,11 @@
 {
   "setup":{
     
-    "imgStartYr":2018,
-    "imgEndYr":2020,
+    "imgStartYr":2020,
+    "imgEndYr":2022,
     
-    "phenStartYr":2018,
-    "phenEndYr":2020,
+    "phenStartYr":2020,
+    "phenEndYr":2022,
     
     "downloadImagery":false,
     "preprocessImagery":true,
@@ -38,9 +38,9 @@
   
     "SCC":{
     
-    "workDir":"/projectnb/nasa-marsh/LCSC/MSLSP/Output/",
-    "logDir":"/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/",
-    "dataDir":"/projectnb/nasa-marsh/LCSC/MSLSP/Input/",
+    "workDir":"/projectnb/modislc/users/mkmoon/csda/mslsp/output/",
+    "logDir":"/projectnb/modislc/users/mkmoon/csda/mslsp/runLogs/",
+    "dataDir":"/projectnb/modislc/users/mkmoon/csda/mslsp/input/",
     "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
     "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
@@ -70,8 +70,8 @@
     "gdown_threshes":[0.9, 0.5, 0.15],
     
     "dormantQuantile":0.05,  
-    "dormStart":"2019-01-01",
-    "dormEnd":"2021-12-31",
+    "dormStart":"2020-01-01",
+    "dormEnd":"2022-12-31",
 
     "spikeThresh":2,            
     "minResid":0.1,              
