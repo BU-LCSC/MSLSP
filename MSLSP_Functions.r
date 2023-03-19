@@ -108,14 +108,26 @@ ApplyMask_QA <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, 
       bNames <- c('B02','B03','B04','B05','B06','B07')
       bands <- matrix(as.integer(0),length(mask),length(bNames))
       # for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
-      for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(rast(paste0(theBase, bNames[i],'.tif')))*10000)}
+      for (i in 1:length(bNames)) {
+        valB <- values(rast(paste0(theBase, bNames[i],'.tif')))
+        tmp <- na.omit(valB)
+        tmp <- tmp %% 1 == 0
+        if(sum(tmp)==length(tmp)){bands[,i] <- as.integer(valB)  
+        }else{                    bands[,i] <- as.integer(valB*10000)}
+      }
 
   } else if (sensor == 'S30') {
      bNames <- c('B02','B03','B04','B8A','B11','B12','B05','B06','B07')
      bands <- matrix(as.integer(0),length(mask),length(bNames))
 
-      # for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
-     for (i in 1:length(bNames)) {bands[,i] <- as.integer(values(rast(paste0(theBase, bNames[i],'.tif')))*10000)}
+     # for (i in 1:length(bNames)) {bands[,i] <- as.integer(readGDAL(paste0(theBase, bNames[i]),silent=T)$band1*10000)}
+     for (i in 1:length(bNames)) {
+       valB <- values(rast(paste0(theBase, bNames[i],'.tif')))
+       tmp <- na.omit(valB)
+       tmp <- tmp %% 1 == 0
+       if(sum(tmp)==length(tmp)){bands[,i] <- as.integer(valB)  
+       }else{                    bands[,i] <- as.integer(valB*10000)}
+     }
      
   } else if (sensor == 'S10') {
     #Need to get all bands to 10m first. Using Broad band NIR (10m) instead of Narrow (20m)
