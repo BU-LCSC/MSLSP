@@ -151,7 +151,7 @@ ApplyMask_QA <-function(imgName, tile, waterMask, chunkStart, chunkEnd, params, 
 
   bands[bands < 0] <- NA    #Remove negative reflectance values
   bands[mask,]  <-  NA
-  bands[waterMask,]  <-  NA
+  #bands[waterMask,]  <-  NA
   
   #Mask pixels that have missing data in ANY band. These are likely problem pixels (and we need most bands for despiking, kmeans, snow detection, etc).
   check <- rowSums(is.na(bands)) > 0
@@ -397,7 +397,7 @@ runTopoCorrection <- function(imgName, groups, slopeVals, aspectVals, chunkStart
 #Write phenology results for each chunk to disk
 #Douglas Bolton
 #---------------------------------------------------------------------
-runPhenoChunk <- function(chunk, numPix, imgYrs, phenYrs, errorLog, params) {
+runPhenoChunk <- function(chunk, numPix, waterMask, imgYrs, phenYrs, errorLog, params) {
 
     pheno_pars <- params$phenology_parameters
   
@@ -451,8 +451,12 @@ runPhenoChunk <- function(chunk, numPix, imgYrs, phenYrs, errorLog, params) {
     #Set snow pixels to NA
     b2[snowPix] <- NA; b3[snowPix] <- NA; b4[snowPix] <- NA
     b5[snowPix] <- NA; b6[snowPix] <- NA; b7[snowPix] <- NA 
-    re1[snowPix] <- NA; re2[snowPix] <- NA; re3[snowPix] <- NA 
+    re1[snowPix] <- NA; re2[snowPix] <- NA; re3[snowPix] <- NA
     
+    #Set water pixels to NA
+    b2[waterMask] <- NA; b3[waterMask] <- NA; b4[waterMask] <- NA
+    b5[waterMask] <- NA; b6[waterMask] <- NA; b7[waterMask] <- NA 
+    re1[waterMask] <- NA; re2[waterMask] <- NA; re3[waterMask] <- NA
     
     #Calculate index, mask negative values
     vi <- calcIndex(blue=b2/10000,green=b3/10000,red=b4/10000,
@@ -470,6 +474,7 @@ runPhenoChunk <- function(chunk, numPix, imgYrs, phenYrs, errorLog, params) {
     b2 <- bands[[1]];  b3 <- bands[[2]]; b4 <- bands[[3]]
     b5 <- bands[[4]]; b6 <- bands[[5]]; b7 <- bands[[6]];
     vi <- bands[[7]]
+    
     remove(imgData)
     remove(bands)
     

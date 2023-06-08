@@ -306,7 +306,8 @@ registerDoMC(cores=params$setup$numCores)
 if (params$setup$runPhenology) {   
   #Run phenology code for each image chunk
   imgLog <- foreach(j=1:numChunks) %dopar% {
-      log <- try({runPhenoChunk(j, numPixPerChunk[j], imgYrs, phenYrs, errorLog, params)},silent=T)
+      waterMask_chunk <- waterMask[chunkStart[j]:chunkEnd[j]]
+      log <- try({runPhenoChunk(j, numPixPerChunk[j], waterMask_chunk, imgYrs, phenYrs, errorLog, params)},silent=T)
       if (inherits(log, 'try-error')) {cat(paste('RunPhenoChunk: Error for chunk', j,'\n'), file=errorLog, append=T)}
   }
   
