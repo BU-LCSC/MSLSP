@@ -1,4 +1,4 @@
-#Douglas Bolton, Boston University
+#Douglas Bolton, Minkyu Moon, and Seamore Zhu Boston University
 #Main script for running HLS Land Surface Phenology
 #######################################################################################
 
@@ -15,17 +15,9 @@ print('')
 print('')
 
 library(sf)
-# library(raster)
 library(terra)
 library(imager)   #needed for efficient distance to snow calculate
 library(ncdf4)
-
-# library(raster)
-# library(rgdal)
-# library(gdalUtils)
-# library(rgeos)
-# library(imager)   #needed for efficient distance to snow calculate
-# library(ncdf4)
 
 library(iterators)
 library(foreach)
@@ -51,23 +43,18 @@ print('')
 
 #Read in arguments
 args <- commandArgs(trailingOnly=T)
-
-# setwd('/projectnb/modislc/users/mkmoon/cdsa/mslsp/output/06VUR')
-# args <- c('06VUR',
-#           'parameters_2023_01_05_17_07_06.json',
-#           '06VUR_instanceInfo__2023_01_05_17_07_06.txt',
-#           '06VUR_errorLog__2023_01_05_17_07_06.txt')
-
 print(args)
 tile <- args[1]
 jsonFile <- args[2]
 runLog <- args[3] 
 errorLog <- args[4] 
 
-# tile     <- "15RWN"
-# jsonFile <- "/projectnb/nasa-marsh/LCSC/MSLSP/Output/15RWN/parameters_2023_03_16_11_25_43.json"
-# runLog   <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_instanceInfo_2023_03_16_11_25_43.txt"
-# errorLog <- "/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/15RWN_errorLog_2023_03_16_11_25_43.txt"
+
+# tile <- '05WPS'
+# jsonFile <- '/projectnb/modislc/users/mkmoon/csda/mslsp/output/05WPS/parameters_2023_03_17_23_04_41.json'
+# runLog <- '/projectnb/modislc/users/mkmoon/csda/mslsp/runLogs/05WPS_instanceInfo_2023_03_17_23_04_41.txt'
+# errorLog <- '/projectnb/modislc/users/mkmoon/csda/mslsp/runLogs/05WPS_errorLog_2023_03_17_23_04_41.txt'
+
 
 #Get default parameters
 params <- fromJSON(file=jsonFile)
@@ -132,10 +119,10 @@ if (params$setup$AWS_or_SCC == "SCC" & params$SCC$runS10) {params$setup$image_re
 #Make chunk folders and temporary output folders
 ####################
 for (i in 1:numChunks) {dirName <- paste0(params$dirs$chunkDir,"c",i,'/')
-  if (!dir.exists(dirName)) {dir.create(dirName,recursive=T)}}
+if (!dir.exists(dirName)) {dir.create(dirName,recursive=T)}}
 
 for (y in seq(phenStartYr,phenEndYr)) {for (i in seq(1,params$phenology_parameters$numLyrs)) {dirName <- paste0(params$dirs$tempDir,'outputs/y',y,'/lyr',i,'/')
-  if (!dir.exists(dirName)) {dir.create(dirName,recursive=T)}}}
+if (!dir.exists(dirName)) {dir.create(dirName,recursive=T)}}}
 
 
 
@@ -149,32 +136,32 @@ phenYrs <- phenStartYr:phenEndYr     #What years will we calculate phenology for
 
 #Get full image list
 ###########
-imgList <- list.files(path=params$dirs$imgDir, pattern=glob2rx("HLS*Fmask.tif"), full.names=T, recursive=T)
+# imgList <- list.files(path=params$dirs$imgDir, pattern=glob2rx("HLS*Fmask.tif"), full.names=T, recursive=T)
+imgList <- list.dirs(path=params$dirs$imgDir, full.names=T)[-1]
 
 #Get the year and doy of each image. Restrict to time period of interest
 ##########################
-sensor <- matrix(NA,length(imgList),1)
-yrdoy = as.numeric(matrix(NA,length(imgList),1))
+sensor         <- matrix(NA,length(imgList),1)
+yrdoy          <- as.numeric(matrix(NA,length(imgList),1))
+imgName_strip  <- matrix(NA,length(imgList),1)
 for (i in 1:length(imgList)) {
-  imgName_strip = tail(unlist(strsplit(imgList[i],'/')),n = 1)
-  sensor[i] <- unlist(strsplit(imgName_strip,'.',fixed = T))[2]
-  yrdoy[i]= substr(unlist(strsplit(imgName_strip,'.',fixed = T))[4],1,7)}
+  imgName_strip[i] = tail(unlist(strsplit(imgList[i],'/')),n = 1)
+  sensor[i] <- unlist(strsplit(imgName_strip[i],'.',fixed = T))[2]
+  yrdoy[i]= substr(unlist(strsplit(imgName_strip[i],'.',fixed = T))[4],1,7)}
 doys <- as.numeric(format(as.Date(strptime(yrdoy, format="%Y%j")),'%j'))
 years <- as.numeric(format(as.Date(strptime(yrdoy, format="%Y%j")),'%Y'))
 
 keep <- (years >= (imgStartYr - 1)) & (years <= (imgEndYr + 1))  #Only keep imagery +/- 1 (need 6 month buffer)
 
-#Deterime which data to keep
+#Determine which data to keep
 if (!params$setup$includeLandsat) {drop <- sensor == 'L30'; keep[drop] <- FALSE}
 if (!params$setup$includeSentinel) {drop <- sensor == 'S30'; keep[drop] <- FALSE}  
-  
+
 imgList <- imgList[keep]
 yrdoy <- yrdoy[keep]
 doys <- doys[keep]
 years <- years[keep]
 sensor <- sensor[keep]
-
-
 
 
 uniqueYrs <- sort(unique(years))  #What years do we actually have imagery for? (imgYears +/- 1 for buffer years)
@@ -192,13 +179,12 @@ for (y in uniqueYrs) {
     cat(paste0('S30_',y,':',nS30,'\n'), file=runLog, append=T)
   }
 }
-      
+
 
 
 #Get raster information from first image
 ##########################
-qaName  <-  paste0('HDF4_EOS:EOS_GRID:',imgList[1], ':Grid:QA')
-baseImage  <-  rast(qaName) #Set up base image that we'll use for outputs
+baseImage  <-  rast(paste0(imgList[1],'/',imgName_strip[1],'.Fmask.tif')) #Set up base image that we'll use for outputs
 numPix  <-  ncol(baseImage)*nrow(baseImage)   #Get total number of pixels
 
 #Sort out chunk boundaries
@@ -220,12 +206,12 @@ remove(water)
 #####################################################
 #####################################################
 if (params$setup$preprocessImagery) {  
-
+  
   #Apply mask and write out chunked images. 
   imgLog <- foreach(j=1:length(imgList),.combine=c) %dopar% {
-                log <- try({ApplyMask_QA(imgList[j], tile, waterMask, chunkStart, chunkEnd, params)},silent=T)
-                if (inherits(log, 'try-error')) {cat(paste('ApplyMask_QA: Error for', imgList[j],'\n'), file=errorLog, append=T)}  #If there's an error, keep going, but write to error log
-                }   
+    log <- try({ApplyMask_QA(imgList[j], tile, waterMask, chunkStart, chunkEnd, params)},silent=T)
+    if (inherits(log, 'try-error')) {cat(paste('ApplyMask_QA: Error for', imgList[j],'\n'), file=errorLog, append=T)}  #If there's an error, keep going, but write to error log
+  }   
   
   #Topographic Correction of images
   #TopoMethod is either set to VI or None. If set to None, this step is skipped.
@@ -234,7 +220,7 @@ if (params$setup$preprocessImagery) {
     
     #In this approach, pixels will be clustered (kmeans) according to specified vegetation indices
     #Once clusters are determined, each cluster/band combo will be topographically corrected separately.
-  
+    
     topo_pars <- params$topocorrection_parameters
     
     #Read in slope and aspect rasters
@@ -260,15 +246,15 @@ if (params$setup$preprocessImagery) {
         if (yr == uniqueYrs[1] & min(subDOY) > topo_pars$requiredDoyStart) {yrPull <- yr+1
         } else if (yr == uniqueYrs[length(uniqueYrs)] & max(subDOY) < topo_pars$requiredDoyEnd) {yrPull <- yr-1
         } else {yrPull <- yr}
-  
+        
         #Calculate the VIs by reading in image chunks, and calcuating percentiles
         indexImg <- foreach(j=1:numChunks,.combine=rbind) %dopar% {
           getIndexQuantile(j, numPixPerChunk[j], yrPull, errorLog, params)}
-      
+        
         #Convert VIs to z-scores prior to kmeans
         for (i in 1:dim(indexImg)[2]) {
-              col <- indexImg[,i]
-              indexImg[,i] <- (col - mean(col,na.rm=T)) / sd(col,na.rm=T)
+          col <- indexImg[,i]
+          indexImg[,i] <- (col - mean(col,na.rm=T)) / sd(col,na.rm=T)
         }
         
         #Perform kmeans. Must first remove NA values (otherwise kmeans fails). Topo correction will be performed for each class
@@ -277,11 +263,11 @@ if (params$setup$preprocessImagery) {
         groups <- matrix(0,numPix)
         groups[goodPix] <-  kClust$cluster
         groups[is.na(groups) | is.na(slopeVals) | is.na(aspectVals)]  <- 0    #Assign zero value to groups if slope, aspect, or group is NA
-  
+        
         #Now that we have kmeans classes, run the topographic correction function. 
         imgLog <- foreach(j=1:length(subList),.combine=c) %dopar% {
-                 log <- try({runTopoCorrection(subList[j], groups, slopeVals, aspectVals, chunkStart,chunkEnd, errorLog, params)}, silent=T)
-                 if (inherits(log, 'try-error')) {cat(paste('RunTopoCorrection: Error for', subList[j],'\n'), file=errorLog, append=T)} 
+          log <- try({runTopoCorrection(subList[j], groups, slopeVals, aspectVals, chunkStart,chunkEnd, errorLog, params)}, silent=T)
+          if (inherits(log, 'try-error')) {cat(paste('RunTopoCorrection: Error for', subList[j],'\n'), file=errorLog, append=T)} 
         }
       }
     }
@@ -306,9 +292,9 @@ registerDoMC(cores=params$setup$numCores)
 if (params$setup$runPhenology) {   
   #Run phenology code for each image chunk
   imgLog <- foreach(j=1:numChunks) %dopar% {
-      waterMask_chunk <- waterMask[chunkStart[j]:chunkEnd[j]]
-      log <- try({runPhenoChunk(j, numPixPerChunk[j], waterMask_chunk, imgYrs, phenYrs, errorLog, params)},silent=T)
-      if (inherits(log, 'try-error')) {cat(paste('RunPhenoChunk: Error for chunk', j,'\n'), file=errorLog, append=T)}
+    waterMask_chunk <- waterMask[chunkStart[j]:chunkEnd[j]]
+    log <- try({runPhenoChunk(j, numPixPerChunk[j], waterMask_chunk, imgYrs, phenYrs, errorLog, params)},silent=T)
+    if (inherits(log, 'try-error')) {cat(paste('RunPhenoChunk: Error for chunk', j,'\n'), file=errorLog, append=T)}
   }
   
   
@@ -321,9 +307,9 @@ if (params$setup$runPhenology) {
     CreateExtendedQA(yr,qaFile, productTable, baseImage, params)
     CreateProduct(yr,productFile, qaFile, productTable, baseImage, waterMask, params)
   }
-    
-      
-     
+  
+  
+  
   total_time <- as.numeric(difftime(Sys.time(),start_time,units="mins"))
   time_step2 <- total_time - time_step1
   print('----------------------------------------------------------------------------------------------')
@@ -334,6 +320,37 @@ if (params$setup$runPhenology) {
   
 }
 
+#STEP 3 - Update Composites to Include Nonvegetated
+#####################################################
+#####################################################
+if (params$setup$runNonvegComposite) {
+  #Run compositing code for each image chunk
+  imgLog <- foreach(j=1:numChunks) %dopar% {
+    nPix <- chunkEnd[j] - chunkStart[j]+1
+    log <- try({runNonvegComposite(j, nPix, imgYrs, phenYrs, errorLog, tile, params)},silent=T)
+    if (inherits(log, 'try-error')) {cat(paste('runNonvegComposite: Error for chunk', j,'\n'), file=errorLog, append=T)}
+  }
+  
+  #Loop through the years processed and output netcdf files
+  yrs <- phenStartYr:phenEndYr  
+  log <- foreach(yr = yrs) %dopar% { 
+    productFile  <- paste0(params$dirs$phenDir,'MSLSP_',tile,'_',yr,'.nc') 
+    qaFile  <- paste0(params$dirs$phenDir,'MSLSP_',tile,'_',yr,'_Extended_QA.nc') 
+    
+    createComposite(yr, numChunks, numPix, baseImage, productFile, params)
+  }  
+  
+  
+  
+  total_time <- as.numeric(difftime(Sys.time(),start_time,units="mins"))
+  time_step3 <- total_time - time_step1 - time_step2
+  print('----------------------------------------------------------------------------------------------')
+  print(paste('Finished updating composites in',round(time_step3,1),'minutes'))
+  print('')
+  print('')
+  cat(paste0('Step3_Minutes:',round(time_step3,1),'\n'), file=runLog, append=T)
+  
+}
 
 #Write to log
 ######################

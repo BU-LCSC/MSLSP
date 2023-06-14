@@ -1,15 +1,16 @@
 {
   "setup":{
     
-    "imgStartYr":2018,
-    "imgEndYr":2020,
+    "imgStartYr":2020,
+    "imgEndYr":2022,
     
-    "phenStartYr":2018,
-    "phenEndYr":2020,
+    "phenStartYr":2020,
+    "phenEndYr":2022,
     
     "downloadImagery":false,
-    "preprocessImagery":true,
-    "runPhenology":true,
+    "preprocessImagery":false,
+    "runPhenology":false,
+    "runNonvegComposite":true,
     
     "runFmaskSentinel":true,
     
@@ -38,12 +39,12 @@
   
     "SCC":{
     
-    "workDir":"/projectnb/nasa-marsh/LCSC/MSLSP/Output/",
-    "logDir":"/projectnb/nasa-marsh/LCSC/MSLSP/runLogs/",
-    "dataDir":"/projectnb/nasa-marsh/LCSC/MSLSP/Input/",
-    "rScript":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Script.r",
-    "rFunctions":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Functions.r",
-    "productTable":"/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Layers.csv",
+    "workDir":"/projectnb/modislc/users/seamorez/Classes/DIP/output/",
+    "logDir":"/projectnb/modislc/users/seamorez/Classes/DIP/runLogs/",
+    "dataDir":"/projectnb/modislc/users/seamorez/Classes/DIP/input/",
+    "rScript":"/usr3/graduate/seamorez/GitHub/MSLSP/MSLSP_Script.r",
+    "rFunctions":"/usr3/graduate/seamorez/GitHub/MSLSP/MSLSP_Functions.r",
+    "productTable":"/usr3/graduate/seamorez/GitHub/MSLSP/MSLSP_Layers.csv",
     
     "numCores":28,
     "numChunks":196,

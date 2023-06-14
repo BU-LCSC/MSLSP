@@ -1,8 +1,8 @@
 
 module load jq
 
-parameters="/usr3/graduate/mkmoon/GitHub/MSLSP/MSLSP_Parameters.json"
-tileList="tileLists/cdsa.txt"
+parameters="/usr3/graduate/seamorez/GitHub/MSLSP/MSLSP_Parameters.json"
+tileList="tileLists/AK_Toolik_v2.txt"
 
 numCores=$( jq .SCC.numCores $parameters )
 workDir=$( jq --raw-output .SCC.workDir $parameters )
@@ -57,7 +57,7 @@ then
         nameArg="-N R_${tile}"
         logArg="-o ${logDir}Run_${tile}_${jobTime}.txt"
         holdArg="-hold_jid DL_${tile}"
-        qsub $nameArg $logArg $nodeArgs $holdArg MSLSP_runTile_SCC.sh $tile $paramName $jobTime
+        qsub $nameArg $logArg $nodeArgs $holdArg SCC/MSLSP_runTile_SCC.sh $tile $paramName $jobTime
     done < $tileList
 else
     while read -r tile
@@ -66,7 +66,7 @@ else
         paramName="${tileDir}parameters_${jobTime}.json"
         nameArg="-N R_${tile}"
         logArg="-o ${logDir}Run_${tile}_${jobTime}.txt"
-        qsub $nameArg $logArg $nodeArgs MSLSP_runTile_SCC.sh $tile $paramName $jobTime
+        qsub $nameArg $logArg $nodeArgs SCC/MSLSP_runTile_SCC.sh $tile $paramName $jobTime
     done < $tileList
 fi
 
