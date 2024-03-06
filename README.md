@@ -14,7 +14,7 @@ Next, under "AWS" are file paths and job submission settings for submitting jobs
 
 Under "phenology_parameters", you can choose the vegetation_index to run with. The default is EVI2. Toggle doComposites to set whether or not the algorithm produces synthetic spectra composite images for each phenometric. All other settings within this section and the rest of the parameters file do not need to be changed. 
 
-### Step 2: Tile list - MSLSP/SCC/tileLists/
+### Step 2: Tile list - [SCC/tileLists/](SCC/tileLists/)
 Make a tileLists directory. Then, create a text file that stores the five-character HLS tile name for the tiles you want (##ABC), separating each tile name with a new line.
 
 ### Step 3: Setup of MSLSP_submitTiles_SCC.sh - [MSLSP_submitTiles_SCC.sh](SCC/MSLSP_submitTiles_SCC.sh)
