@@ -17,12 +17,12 @@ Under "phenology_parameters", you can choose the vegetation_index to run with. T
 ### Step 2: Tile list - MSLSP/SCC/tileLists/
 Make a tileLists directory. Then, create a text file that stores the five-character HLS tile name for the tiles you want (##ABC), separating each tile name with a new line.
 
-### Step 3: Setup of MSLSP_submitTiles_SCC.sh - [MSLSP_submitTiles_SCC.sh](MSLSP/SCC/MSLSP_submitTiles_SCC.sh)
+### Step 3: Setup of MSLSP_submitTiles_SCC.sh - [MSLSP_submitTiles_SCC.sh](SCC/MSLSP_submitTiles_SCC.sh)
 Make sure the parameters variable is set to the file path where your MSLSP_Parameters.json file is located. The tileList variable is the path to the txt file created in Step 2.
 
-### Step 4: Running MSLSP - [MSLSP_submitTiles_SCC.sh](MSLSP/SCC/MSLSP_submitTiles_SCC.sh)
+### Step 4: Running MSLSP - [MSLSP_submitTiles_SCC.sh](SCC/MSLSP_submitTiles_SCC.sh)
 At this point, you are ready to run MSLSP. Run MSLSP_submitTiles_SCC.sh to submit all download and LSP tasks. Keep track of tasks with "qstat -u *yourusername* " and delete tasks with "qdel *enter job-ID number*". View log files to track progress and any potential errors. The final products are output as netcdf files containing the product layers for each year.
    
 
 ## Additional Notes
-Functions are contained in [MSLSP_Functions.r](MSLSP/MSLSP_Functions.r). The MSLSP_nonvegcomp branch includes the option to create composite imagery for non-vegetated areas without LSP. This is done by taking the average phenometrics for each image chunk and creating a +/-14 days range to gather images for mean compositing. Using this method, synthetic imagery will be gap-free where imagery is available. Vegetated areas will have synthetic imagery modeled from LSP while non-vegetated areas will have composite imagery from date rangse close to the surrounding area's LSP metrics. The compositing average method and date range can be changed within the DoNonvegComp function in MSLSP_Functions.r.
+Functions are contained in [MSLSP_Functions.r](MSLSP_Functions.r). The MSLSP_nonvegcomp branch includes the option to create composite imagery for non-vegetated areas without LSP. This is done by taking the average phenometrics for each image chunk and creating a +/-14 days range to gather images for mean compositing. Using this method, synthetic imagery will be gap-free where imagery is available. Vegetated areas will have synthetic imagery modeled from LSP while non-vegetated areas will have composite imagery from date rangse close to the surrounding area's LSP metrics. The compositing average method and date range can be changed within the DoNonvegComp function in MSLSP_Functions.r.
