@@ -438,7 +438,7 @@ runPhenoChunk <- function(chunk, numPix, waterMask, imgYrs, phenYrs, errorLog, p
   
   for (i in 1:length(ord)) {
     img <- imgList[ord[i]]
-    imgData <- try(matrix(readRDS(paste0(chunkFold,img)),nrow=numPix),silent = TRUE)
+    imgData <- try(matrix(readRDS(paste0(chunkFold,img)),nrow=numPix))
     if (inherits(imgData, 'try-error')) {cat(paste('runPhenoChunk: Error for chunk',chunk,img), file=errorLog, append=T);next} 
     
     b2[,i] <- imgData[,1]; b3[,i] <- imgData[,2]; b4[,i] <- imgData[,3]
@@ -524,7 +524,10 @@ runPhenoChunk <- function(chunk, numPix, waterMask, imgYrs, phenYrs, errorLog, p
   pheno_mat <- matrix(NA,numPix,pheno_pars$numLyrs*length(phenYrs))
   for (i in 1:numPix) {pheno_mat[i,] <- DoPhenologyHLS(b2[i,],  b3[i,],  b4[i,],  b5[i,],  b6[i,], b7[i,],  vi[i,],
                                                        snowPix[i,],dates, imgYrs, phenYrs, splineStart, splineEnd, numDaysFit, pheno_pars)}
-
+  #TEST SPLINE FOR ONE PIXEL
+  #for (i in 2000:2000) {pheno_mat[i,] <- DoPhenologyHLS(b2[i,],  b3[i,],  b4[i,],  b5[i,],  b6[i,], b7[i,],  vi[i,],
+  #                                                     snowPix[i,],dates, imgYrs, phenYrs, splineStart, splineEnd, numDaysFit, pheno_pars)}
+  
   pheno_mat <- round(pheno_mat)
   
   #Write results to disk (.Rds files)
@@ -586,7 +589,10 @@ runNonvegComposite <- function(chunk, numPix, imgYrs, phenYrs, errorLog, tile, p
     
     # comp_mat AND WRITING RESULTS PART NEED TO BE EDITED BASED ON UNIQUE PROPERTIES OF MULTI-BAND
     # IMAGE CHUNKS
-    all_phenocomps <- DoNonvegComp(b2,  b3,  b4,  b5,  b6, b7, dates, year, phenoFile)
+    #all_phenocomps <- DoNonvegComp(b2,  b3,  b4,  b5,  b6, b7, dates, year, phenoFile)
+    ## TESTING FOR ERRORS
+    all_phenocomps <- try({DoNonvegComp(b2,  b3,  b4,  b5,  b6, b7, dates, year, phenoFile)})
+    if (inherits(all_phenocomps, 'try-error')) {print(paste('DoNonvegComp: Error for chunk', chunk,'\n'))}
     
     j<-1
     for (phenocomp in all_phenocomps) {
@@ -1377,23 +1383,41 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
     b2[spikes] <- NA; b3[spikes] <- NA; b4[spikes] <- NA
     b5[spikes] <- NA; b6[spikes] <- NA; b7[spikes] <- NA
     
-    dormIms <- dates >= pheno_pars$dormStart & dates <= pheno_pars$dormEnd
-    
-    vi_dorm <- quantile(vi[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T)   #Calc vi dormant value
-    snowPix <- Screen_SnowFills(vi,vi_dorm,snowPix,dates,pheno_pars)              #Screen poorly filled snow values
-    
-    
-    #now calculate dormancy values and fill individual bands
-    dormObs <- dormIms & vi < vi_dorm    #Defining dormant observations for bands as median on dates when vi < vi_dorm
-    b2_dorm <- median(b2[dormObs], na.rm=T); b2[snowPix] <- b2_dorm
-    b3_dorm <- median(b3[dormObs], na.rm=T); b3[snowPix] <- b3_dorm
-    b4_dorm <- median(b4[dormObs], na.rm=T); b4[snowPix] <- b4_dorm
-    b5_dorm <- median(b5[dormObs], na.rm=T); b5[snowPix] <- b5_dorm
-    b6_dorm <- median(b6[dormObs], na.rm=T); b6[snowPix] <- b6_dorm
-    b7_dorm <- median(b7[dormObs], na.rm=T); b7[snowPix] <- b7_dorm
-    
-    vi[snowPix] <- vi_dorm   #Fill remaining snow values with dormant value for vi  
-    
+    #Testing a moving window approach to selecting dormancy values:
+    i <- 1
+    vi_dorm <- numeric(length(imgYrs))
+    vi_orig <- vi  #Make a copy of original vi without filling to use in identifying vi dormant values
+    snowPix_updated <- snowPix  #Make a copy of snowPix to update
+    for (central_yr in imgYrs) {
+      #print(central_yr) #JUST FOR TESTING
+      #dormIms <- dates >= pheno_pars$dormStart & dates <= pheno_pars$dormEnd
+      dormIms <- dates >= paste0(as.character(central_yr-2),'-01-01') & dates <= paste0(as.character(central_yr+2),'-12-31')
+      dormIms_central <- dates >= paste0(as.character(central_yr),'-01-01') & dates <= paste0(as.character(central_yr),'-12-31')
+      
+      #print(length(dormIms[dormIms==TRUE])) #JUST FOR TESTING
+      #print(length(dormIms_central[dormIms_central==TRUE])) #JUST FOR TESTING
+      vi_dorm[i] <- quantile(vi_orig[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T)   #Calc vi dormant value
+      #snowPix <- Screen_SnowFills(vi_orig,vi_dorm[i],snowPix,dates,pheno_pars)              #Screen poorly filled snow values
+      snowPix_central <- Screen_SnowFills(vi_orig,vi_dorm[i],snowPix,dates,pheno_pars)
+      #snowPix_central <- snowPix
+      snowPix_central[dormIms_central==FALSE] <- FALSE  #Filling for just the central year
+      snowPix_updated[dormIms_central==TRUE] <- snowPix_central[dormIms_central==TRUE]  #Updating for the correct year
+      
+      #now calculate dormancy values and fill individual bands
+      #print(length(snowPix_central[snowPix_central==TRUE])) #JUST FOR TESTING
+      dormObs <- dormIms & vi < vi_dorm[i]    #Defining dormant observations for bands as median on dates when vi < vi_dorm
+      b2_dorm <- median(b2[dormObs], na.rm=T); b2[snowPix_central] <- b2_dorm
+      b3_dorm <- median(b3[dormObs], na.rm=T); b3[snowPix_central] <- b3_dorm
+      b4_dorm <- median(b4[dormObs], na.rm=T); b4[snowPix_central] <- b4_dorm
+      b5_dorm <- median(b5[dormObs], na.rm=T); b5[snowPix_central] <- b5_dorm
+      b6_dorm <- median(b6[dormObs], na.rm=T); b6[snowPix_central] <- b6_dorm
+      b7_dorm <- median(b7[dormObs], na.rm=T); b7[snowPix_central] <- b7_dorm
+      
+      vi[snowPix_central] <- vi_dorm[i]   #Fill remaining snow values with dormant value for vi
+      #print(vi_dorm[i]) #JUST FOR TESTING
+      i <- i+1
+    }
+    #print(vi_dorm) #JUST FOR TESTING
     
     
     #Determine gaps that require filling
@@ -1454,16 +1478,18 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
         
         dateRange <- dates >= splineStart[y] & dates <= splineEnd[y] & !is.na(vi)   
         
-        dateSub <- dates[dateRange]; viSub <- vi[dateRange]; snowSub <- snowPix[dateRange]
+        dateSub <- dates[dateRange]; viSub <- vi[dateRange]; snowSub <- snowPix_updated[dateRange]
         
         #Get weights
         weights <- matrix(1,length(snowSub))
         weights[snowSub == 1] <- pheno_pars$snowWeight
         
         pred_dates <- seq(splineStart[y], splineEnd[y], by="day")
+        year_int <- as.integer(format(splineStart[y], "%Y"))  #Extract splining year
+        vi_dorm_yr <- vi_dorm[year_int-imgYrs[1]+1]  #Dormant vi for the splining year
         
         #Assign weights and run cubic spline
-        smoothed <- Smooth_VI(viSub, dateSub, pred_dates, weights, pheno_pars, vi_dorm)
+        smoothed <- Smooth_VI(viSub, dateSub, pred_dates, weights, pheno_pars, vi_dorm_yr)
         
         
         #Mask spline in gaps, and before/after first/last image
@@ -1513,13 +1539,17 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
     
     },silent=TRUE)
     #If there is an error despiking or other initial steps, return NAs
-    if(inherits(log, "try-error")){return(matrix(NA,pheno_pars$numLyrs*length(phenYrs)))}   
+    if(inherits(log, "try-error")){
+      print('Splining error.')
+      return(matrix(NA,pheno_pars$numLyrs*length(phenYrs)))}   
   
   outAll=c()
   for (y in yToDo) {
     log <- try({
       
       pred_dates <- seq(splineStart[y], splineEnd[y], by="day")
+      year_int <- as.integer(format(splineStart[y], "%Y"))  #Extract splining year
+      vi_dorm_yr <- vi_dorm[year_int-imgYrs[1]+1]  #Dormant vi for the splining year
       
       
       if (yrs[y] %in% yrsWithGaps) {
@@ -1543,7 +1573,7 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
         weights <- matrix(weights,vecLength) * baseW   #Multiple weights by base weight (1=good,0.5=snow-filled)
         theInds <- ysGood & weights > 0
         xs_sub <- xs[theInds]; w_sub <- weights[theInds]
-        smoothed_vi <- Smooth_VI(ys[theInds], xs_sub, daysVec, w_sub, pheno_pars, vi_dorm)  #Fit spline
+        smoothed_vi <- Smooth_VI(ys[theInds], xs_sub, daysVec, w_sub, pheno_pars, vi_dorm_yr)  #Fit spline
         
       } else {
         
@@ -1555,6 +1585,12 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
         smoothed_vi <- smoothMat[,y]   #if no gaps to fill, just use existing spline
       }
       
+      #TEST SPLINE FOR ONE PIXEL
+      #png(file=paste0("/projectnb/modislc/users/seamorez/HLS_FCover/output/sample_spline_",y,".png"),
+      #    width=600, height=350)
+      #plot(dateSub,viSub)
+      #lines(pred_dates,smoothed_vi, col="green")
+      #dev.off()
       
       #Fit phenology
       peaks <- FindPeaks(smoothed_vi)
@@ -1709,7 +1745,8 @@ DoNonvegComp <- function(b2, b3, b4, b5, b6, b7, dates, year, phenoPath){
   phen_composites <- vector(mode = "list", length = 7)
   
   # Generate mean phenometrics for the full image
-  phenoImg <- nc_open(phenoPath)
+  phenoImg <- try({nc_open(phenoPath)}, silent=T)
+  if (inherits(phenoImg, 'try-error')) {print(paste('nc_open: Error opening ncdf4:', phenoPath,'\n'))}
   #Get 7 DOY phenometrics
   OGI <- ncvar_get(phenoImg, 'OGI'); OGI50 <- ncvar_get(phenoImg, '50PCGI')
   OGMx <- ncvar_get(phenoImg, 'OGMx'); Peak <- ncvar_get(phenoImg, 'Peak')
@@ -1724,22 +1761,40 @@ DoNonvegComp <- function(b2, b3, b4, b5, b6, b7, dates, year, phenoPath){
   meanpheno <- c(OGImean,OGI50mean,OGMxmean,Peakmean,OGDmean,OGD50mean,OGMnmean)
   
   phen_yr_i = which(yrs %in% as.character(year))
+  if (length(phen_yr_i)==0) {
+    print(paste('No data for entire chunk in this year:',year))
+    phen_doys = c(-1)
+    b2_y<-array(NA, dim=dim(b2));b3_y<-array(NA, dim=dim(b3));b4_y<-array(NA, dim=dim(b4));b5_y<-array(NA, dim=dim(b5));b6_y<-array(NA, dim=dim(b6));b7_y<-array(NA, dim=dim(b7))
+  }
+  else{
   phen_doys = doys[phen_yr_i]
   b2_y <- b2[,phen_yr_i]; b3_y <- b3[,phen_yr_i]; b4_y <- b4[,phen_yr_i]
   b5_y <- b5[,phen_yr_i]; b6_y <- b6[,phen_yr_i]; b7_y <- b7[,phen_yr_i]
+  }
   
   i<-1
   for (phenometric in meanpheno) {
     comp_doys_i = which(as.integer(phen_doys) %in% c((phenometric-14):(phenometric+14)))
-    b2_r <- b2_y[,comp_doys_i]; b3_r <- b3_y[,comp_doys_i]; b4_r <- b4_y[,comp_doys_i]
-    b5_r <- b5_y[,comp_doys_i]; b6_r <- b6_y[,comp_doys_i]; b7_r <- b7_y[,comp_doys_i]
+    if (length(comp_doys_i)==0) {print('Zero'); b2_r<-b2_y;b3_r<-b3_y;b4_r<-b4_y;b5_r<-b5_y;b6_r<-b6_y;b7_r<-b7_y}
+    else {
+      b2_r <- b2_y[,comp_doys_i]; b3_r <- b3_y[,comp_doys_i]; b4_r <- b4_y[,comp_doys_i]
+      b5_r <- b5_y[,comp_doys_i]; b6_r <- b6_y[,comp_doys_i]; b7_r <- b7_y[,comp_doys_i]
+    }
     b2_r[b2_r==32767]<-NA;b3_r[b3_r==32767]<-NA;b4_r[b4_r==32767]<-NA;b5_r[b5_r==32767]<-NA;b6_r[b6_r==32767]<-NA;b7_r[b7_r==32767]<-NA
     
     #Composites for each band
-    b2_c <- round(rowMeans(b2_r,na.rm=TRUE)); b3_c <- round(rowMeans(b3_r,na.rm=TRUE)); b4_c <- round(rowMeans(b4_r,na.rm=TRUE))
-    b5_c <- round(rowMeans(b5_r,na.rm=TRUE)); b6_c <- round(rowMeans(b6_r,na.rm=TRUE)); b7_c <- round(rowMeans(b7_r,na.rm=TRUE))
-    composite <- cbind(b2_c, b3_c, b4_c, b5_c, b6_c, b7_c)
-    phen_composites[[i]] <- composite
+    if (is.null(dim(b2_r))) {
+      print('caught!')
+      b2_c <-b2_r; b3_c <- b3_r; b4_c <-b4_r; b5_c <- b5_r; b6_c <- b6_r; b7_c <- b7_r
+    }
+    else {
+      b2_c <- round(rowMeans(b2_r,na.rm=TRUE)); b3_c <- round(rowMeans(b3_r,na.rm=TRUE)); b4_c <- round(rowMeans(b4_r,na.rm=TRUE))
+      b5_c <- round(rowMeans(b5_r,na.rm=TRUE)); b6_c <- round(rowMeans(b6_r,na.rm=TRUE)); b7_c <- round(rowMeans(b7_r,na.rm=TRUE))
+    }
+    test<-try({composite <- cbind(b2_c, b3_c, b4_c, b5_c, b6_c, b7_c)},silent=T)
+    if (inherits(test,'try-error')) {print('Error in cbind')}
+    test2<-try({phen_composites[[i]] <- composite},silent=T)
+    if (inherits(test2,'try-error')) {print(paste('Error in adding to phen_composites:',length(phen_composites),dim(composite)))}
     i<-i+1
   }
   
@@ -2130,7 +2185,8 @@ createComposite <- function(year, numChunks, numPix, baseImage, phenoPath, param
   phenoImg <- nc_open(phenoPath, write=TRUE, verbose=FALSE)
 
   for (i in c(1:7)) {
-    full_pheno_mat <- readChunks(numChunks, numPix, paste0(outFold,'y',as.character(year),'/'), i)
+    loga <- try({full_pheno_mat <- readChunks(numChunks, numPix, paste0(outFold,'y',as.character(year),'/'), i)},silent=T)
+    if (inherits(loga,'try-error')) {print(paste('readChunks error for',year))}
     
     if (i==1) {pm_part='OGI_b'}; if (i==2) {pm_part='50PCGI_b'}; if (i==3) {pm_part='OGMx_b'}; 
     if (i==4) {pm_part='Peak_b'}; if (i==5) {pm_part='OGD_b'}; if (i==6) {pm_part='50PCGD_b'};
@@ -2140,13 +2196,16 @@ createComposite <- function(year, numChunks, numPix, baseImage, phenoPath, param
       pm_name = paste0(pm_part,j+1)
       layer_data <- ncvar_get(phenoImg, pm_name)
       
-      full_pheno_band <- matrix(full_pheno_mat[,j], dim(baseImage)[1],dim(baseImage)[2])
+      log <- try({full_pheno_band <- matrix(full_pheno_mat[,j], dim(baseImage)[1],dim(baseImage)[2])},silent=T)
+      if (inherits(log,'try-error')) {print(paste('Matrix reshape error (base image, full composite):',dim(baseImage),dim(full_pheno_mat[,j])))}
       
       full_pheno_band[full_pheno_band < -32767 | full_pheno_band > 32767 | is.na(full_pheno_band)] <- 32767
       new_var = ncvar_def(paste0('p',i,'_b',j), 'Reflectance', list(prj_info$dimx,prj_info$dimy), 32767, 'Composite band', prec='short', compression=2)
       
       na_indices <- which(is.na(layer_data), arr.ind = TRUE)
-      layer_data[na_indices] <- full_pheno_band[na_indices]
+      logb <- try({layer_data[na_indices] <- full_pheno_band[na_indices]},silent=T)
+      if (inherits(log,'try-error')) {print(paste('Mismatched dims error (layer, full composite):',dim(layer_data), dim(full_pheno_band)))}
+        
       ncvar_put(phenoImg, pm_name, layer_data)
     }
   }
