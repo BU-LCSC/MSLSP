@@ -1,15 +1,15 @@
 {
   "setup":{
     
-    "imgStartYr":2020,
-    "imgEndYr":2022,
+    "imgStartYr":2015,
+    "imgEndYr":2024,
     
-    "phenStartYr":2020,
-    "phenEndYr":2022,
+    "phenStartYr":2016,
+    "phenEndYr":2023,
     
-    "downloadImagery":false,
-    "preprocessImagery":false,
-    "runPhenology":false,
+    "downloadImagery":true,
+    "preprocessImagery":true,
+    "runPhenology":true,
     "runNonvegComposite":true,
     
     "runFmaskSentinel":true,
@@ -39,9 +39,9 @@
   
     "SCC":{
     
-    "workDir":"/projectnb/modislc/users/seamorez/Classes/DIP/output/",
-    "logDir":"/projectnb/modislc/users/seamorez/Classes/DIP/runLogs/",
-    "dataDir":"/projectnb/modislc/users/seamorez/Classes/DIP/input/",
+    "workDir":"/projectnb/modislc/users/seamorez/HLS_FCover/output/",
+    "logDir":"/projectnb/modislc/users/seamorez/HLS_FCover/runLogs/",
+    "dataDir":"/projectnb/modislc/users/seamorez/HLS_FCover/input/",
     "rScript":"/usr3/graduate/seamorez/GitHub/MSLSP/MSLSP_Script.r",
     "rFunctions":"/usr3/graduate/seamorez/GitHub/MSLSP/MSLSP_Functions.r",
     "productTable":"/usr3/graduate/seamorez/GitHub/MSLSP/MSLSP_Layers.csv",
@@ -60,7 +60,7 @@
     
     "doComposites":true,
     
-    "min_seg_amplitude":0.1,  
+    "min_seg_amplitude":0.08,  
     "min_increase_length":30,   
     "max_increase_length":185,   
     "min_decrease_length":30,   
@@ -71,8 +71,8 @@
     "gdown_threshes":[0.9, 0.5, 0.15],
     
     "dormantQuantile":0.05,  
-    "dormStart":"2019-01-01",
-    "dormEnd":"2021-12-31",
+    "dormStart":"2015-01-01",
+    "dormEnd":"2024-12-31",
 
     "spikeThresh":2,            
     "minResid":0.1,              
