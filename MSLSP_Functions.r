@@ -1383,28 +1383,27 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
     b2[spikes] <- NA; b3[spikes] <- NA; b4[spikes] <- NA
     b5[spikes] <- NA; b6[spikes] <- NA; b7[spikes] <- NA
     
-    #Testing a moving window approach to selecting dormancy values:
+    #Implement a new 5-year moving window approach to selecting dormancy values:
+    #For each central year, the dormant VI and band values will be selected
+    #from a 5-year window. Yearly snow values will be filled with the 
+    #corresponding dormant values.
+    #Code by Seamore Zhu
     i <- 1
-    vi_dorm <- numeric(length(imgYrs))
-    vi_orig <- vi  #Make a copy of original vi without filling to use in identifying vi dormant values
+    vi_dorm <- numeric(length(imgYrs))  #Set up yearly vi dormant values
+    vi_orig <- vi  #Make a copy of vi without filling to use in identifying vi dormant values
     snowPix_updated <- snowPix  #Make a copy of snowPix to update
     for (central_yr in imgYrs) {
-      #print(central_yr) #JUST FOR TESTING
-      #dormIms <- dates >= pheno_pars$dormStart & dates <= pheno_pars$dormEnd
+      #Five-year window dates
       dormIms <- dates >= paste0(as.character(central_yr-2),'-01-01') & dates <= paste0(as.character(central_yr+2),'-12-31')
+      #Central year dates
       dormIms_central <- dates >= paste0(as.character(central_yr),'-01-01') & dates <= paste0(as.character(central_yr),'-12-31')
       
-      #print(length(dormIms[dormIms==TRUE])) #JUST FOR TESTING
-      #print(length(dormIms_central[dormIms_central==TRUE])) #JUST FOR TESTING
-      vi_dorm[i] <- quantile(vi_orig[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T)   #Calc vi dormant value
-      #snowPix <- Screen_SnowFills(vi_orig,vi_dorm[i],snowPix,dates,pheno_pars)              #Screen poorly filled snow values
+      vi_dorm[i] <- quantile(vi_orig[dormIms],probs=pheno_pars$dormantQuantile,na.rm=T)  #Calc vi dormant value
       snowPix_central <- Screen_SnowFills(vi_orig,vi_dorm[i],snowPix,dates,pheno_pars)
-      #snowPix_central <- snowPix
-      snowPix_central[dormIms_central==FALSE] <- FALSE  #Filling for just the central year
-      snowPix_updated[dormIms_central==TRUE] <- snowPix_central[dormIms_central==TRUE]  #Updating for the correct year
+      snowPix_central[dormIms_central==FALSE] <- FALSE  #Fill just the central year
+      snowPix_updated[dormIms_central==TRUE] <- snowPix_central[dormIms_central==TRUE]   #Updating for the correct year
       
-      #now calculate dormancy values and fill individual bands
-      #print(length(snowPix_central[snowPix_central==TRUE])) #JUST FOR TESTING
+      #Now calculate dormancy values and fill individual bands
       dormObs <- dormIms & vi < vi_dorm[i]    #Defining dormant observations for bands as median on dates when vi < vi_dorm
       b2_dorm <- median(b2[dormObs], na.rm=T); b2[snowPix_central] <- b2_dorm
       b3_dorm <- median(b3[dormObs], na.rm=T); b3[snowPix_central] <- b3_dorm
@@ -1414,11 +1413,9 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
       b7_dorm <- median(b7[dormObs], na.rm=T); b7[snowPix_central] <- b7_dorm
       
       vi[snowPix_central] <- vi_dorm[i]   #Fill remaining snow values with dormant value for vi
-      #print(vi_dorm[i]) #JUST FOR TESTING
       i <- i+1
     }
-    #print(vi_dorm) #JUST FOR TESTING
-    
+
     
     #Determine gaps that require filling
     gDates <- dates[!is.na(vi)]  
@@ -1485,7 +1482,7 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
         weights[snowSub == 1] <- pheno_pars$snowWeight
         
         pred_dates <- seq(splineStart[y], splineEnd[y], by="day")
-        year_int <- as.integer(format(splineStart[y], "%Y"))  #Extract splining year
+        year_int <- as.integer(format(splineStart[y], "%Y"))    #Extract splining year
         vi_dorm_yr <- vi_dorm[year_int-imgYrs[1]+1]  #Dormant vi for the splining year
         
         #Assign weights and run cubic spline
@@ -1548,7 +1545,7 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
     log <- try({
       
       pred_dates <- seq(splineStart[y], splineEnd[y], by="day")
-      year_int <- as.integer(format(splineStart[y], "%Y"))  #Extract splining year
+      year_int <- as.integer(format(splineStart[y], "%Y"))    #Extract splining year
       vi_dorm_yr <- vi_dorm[year_int-imgYrs[1]+1]  #Dormant vi for the splining year
       
       
