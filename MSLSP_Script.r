@@ -292,8 +292,10 @@ registerDoMC(cores=params$setup$numCores)
 if (params$setup$runPhenology) {   
   #Run phenology code for each image chunk
   imgLog <- foreach(j=1:numChunks) %dopar% {
+  #TEST SPLINE FOR ONE PIXEL
+  #imgLog <- foreach(j=196:196) %dopar% {
     waterMask_chunk <- waterMask[chunkStart[j]:chunkEnd[j]]
-    log <- try({runPhenoChunk(j, numPixPerChunk[j], waterMask_chunk, imgYrs, phenYrs, errorLog, params)},silent=T)
+    log <- try({runPhenoChunk(j, numPixPerChunk[j], waterMask_chunk, imgYrs, phenYrs, errorLog, params)})
     if (inherits(log, 'try-error')) {cat(paste('RunPhenoChunk: Error for chunk', j,'\n'), file=errorLog, append=T)}
   }
   
@@ -320,6 +322,10 @@ if (params$setup$runPhenology) {
   
 }
 
+
+#Reset to full cores
+registerDoMC(cores=params$setup$numCores)
+
 #STEP 3 - Update Composites to Include Nonvegetated
 #####################################################
 #####################################################
@@ -337,7 +343,8 @@ if (params$setup$runNonvegComposite) {
     productFile  <- paste0(params$dirs$phenDir,'MSLSP_',tile,'_',yr,'.nc') 
     qaFile  <- paste0(params$dirs$phenDir,'MSLSP_',tile,'_',yr,'_Extended_QA.nc') 
     
-    createComposite(yr, numChunks, numPix, baseImage, productFile, params)
+    log <- try({createComposite(yr, numChunks, numPix, baseImage, productFile, params)},silent=T)
+    if (inherits(log, 'try-error')) {cat(paste('createComposite: Error for year:', yr,'\n'), file=errorLog, append=T)}
   }  
   
   

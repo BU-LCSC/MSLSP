@@ -18,7 +18,7 @@ do
    
    imgSD="${y}-01-01"
    imgED="${y}-12-31"
-   getHLS.sh $tile $imgSD $imgED $imgDir
+   SCC/getHLS.sh $tile $imgSD $imgED $imgDir
    
 done
 

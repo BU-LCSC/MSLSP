@@ -2,7 +2,7 @@
 module load jq
 
 parameters="/usr3/graduate/seamorez/GitHub/MSLSP/MSLSP_Parameters.json"
-tileList="tileLists/AK_Toolik_v2.txt"
+tileList="tileLists/CANTundra_10_atatime.txt"
 
 numCores=$( jq .SCC.numCores $parameters )
 workDir=$( jq --raw-output .SCC.workDir $parameters )
@@ -19,7 +19,8 @@ then
     nodeArgs="-l h_rt=24:00:00 -l mem_per_core=16G -pe mpi_16_tasks_per_node ${numCores}"
 else
     baseDir="${dataDir}HLS30/"
-    nodeArgs="-l h_rt=12:00:00 -pe omp ${numCores}"
+    nodeArgs="-l h_rt=36:00:00 -pe omp ${numCores} -l mem_per_core=13G" # SLOWER SCHEDULING, FASTER EXEC
+    # nodeArgs="-l h_rt=36:00:00 -pe omp 28 -l mem_per_core=9G" # FASTER SCHEDULING, SLOWER EXEC (MAKE SURE TO CHANGE PARAMS JSON > NUMCORES TO 14)
 fi
 
 
@@ -47,7 +48,7 @@ then
         downloadArg="-l download"
         imgStartYr=$(( $( jq .setup.imgStartYr $parameters )))  
         imgEndYr=$(( $( jq .setup.imgEndYr $parameters )))      
-        qsub $nameArg $logArg_download $downloadArg runDownloadHLS.sh $tile $baseDir $imgStartYr $imgEndYr
+        qsub $nameArg $logArg_download $downloadArg SCC/runDownloadHLS.sh $tile $baseDir $imgStartYr $imgEndYr
     done < $tileList
 
     while read -r tile
