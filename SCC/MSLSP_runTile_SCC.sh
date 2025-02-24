@@ -43,8 +43,10 @@ then
 fi
 
 
-tempDir="${workDir}${tile}/temp/"	
-chunkDir="${workDir}${tile}/imageChunks/"
+#tempDir="${workDir}${tile}/temp/"	
+#chunkDir="${workDir}${tile}/imageChunks/"
+tempDir="${TMPDIR}/${tile}/temp/"	
+chunkDir="${TMPDIR}/${tile}/imageChunks/"
 phenDir="${workDir}${tile}/phenoMetrics/"
 
 mkdir -p $tempDir
