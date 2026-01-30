@@ -1537,7 +1537,7 @@ DoPhenologyHLS <- function(b2, b3, b4, b5, b6, b7, vi, snowPix, dates, imgYrs, p
     },silent=TRUE)
     #If there is an error despiking or other initial steps, return NAs
     if(inherits(log, "try-error")){
-      print('Splining error.')
+      #print('Splining error.')
       return(matrix(NA,pheno_pars$numLyrs*length(phenYrs)))}   
   
   outAll=c()
@@ -1770,6 +1770,8 @@ DoNonvegComp <- function(b2, b3, b4, b5, b6, b7, dates, year, phenoPath){
   }
   
   i<-1
+  # If meanpheno all nans, replace 50PCGI, Peak, and 50PCGD for High Arctic fill values
+  if (is.na(meanpheno[2])) {meanpheno <- c(175, 195, 205, 215, 225, 235, 255)}
   for (phenometric in meanpheno) {
     comp_doys_i = which(as.integer(phen_doys) %in% c((phenometric-14):(phenometric+14)))
     if (length(comp_doys_i)==0) {print('Zero'); b2_r<-b2_y;b3_r<-b3_y;b4_r<-b4_y;b5_r<-b5_y;b6_r<-b6_y;b7_r<-b7_y}
@@ -1904,7 +1906,10 @@ readChunks <- function(numChunks, numPix, tempDir, phenometric) {
     matSub <- matrix(NA,boundaries[[2]][n]-boundaries[[1]][n]+1,6)
     fileName <- paste0(tempDir,'c',n,'_p',phenometric,'.Rds')
     matSub <- try(readRDS(fileName),silent=T)
-    if (inherits(matSub, 'try-error')) {print('Nonvegetated composite chunk not found.')}
+    if (inherits(matSub, 'try-error')) {
+      print('Nonvegetated composite chunk not found.')
+      next
+    }
     mat[boundaries[[1]][n]:boundaries[[2]][n],] <- matSub
   }
   return(mat)
